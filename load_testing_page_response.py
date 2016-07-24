@@ -1,5 +1,8 @@
 #NOTE: untested as for now
 
+# python helpers to implement PHP-like features
+import helpers
+
 # substitute for PHP's DOMDocument
 from bs4 import BeautifulSoup
 
@@ -17,7 +20,6 @@ class LoadTestingPageResponse(object):
 
     # DOMDocument of content
     __doc = None
-
 
     # TODO: docstringify
     # /**
@@ -50,8 +52,8 @@ class LoadTestingPageResponse(object):
 	#  */
     def setContent(self, content, content_type = None):
         self.__content = content
-        if not content_type and re.match(r"^(text/html|application/xhtml\+xml|text/xml|application/xml)$", \
-                                                                                content_type, re.IGNORECASE):
+        accpt_cont_types = ['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml']
+        if not content_type or content_type in accpt_cont_types:
             self.__doc = BeautifulSoup(self.__content, 'html.parser')
 
 
@@ -70,11 +72,7 @@ class LoadTestingPageResponse(object):
 	#  * @return int HTTP status code
 	#  */
     def getHttpStatus(self):
-        try:
-            is_not_empty = bool(self.__info['http_code'])
-        except KeyError:
-            is_not_empty = False
-        return int(self.__info['http_code']) if is_not_empty else None
+        return int(self.__info['http_code']) if not helpers.empty(self.__info, 'http_code') else None
 
 
     # TODO: docstringify
@@ -122,11 +120,7 @@ class LoadTestingPageResponse(object):
 	#  * @return string Current URL
 	#  */
     def getCurrentUrl():
-        try: # NOTE: reusing snap of the code from the getHttpStatus function. Is it would be better to make a separate function?
-            is_not_empty = bool(self.__info['url'])
-        except KeyError:
-            is_not_empty = False
-        return self.__info['url'] if is_not_empty else return None
+        return int(self.__info['url']) if not helpers.empty(self.__info, 'url') else None
 
 
     # TODO: docstringify
@@ -135,18 +129,13 @@ class LoadTestingPageResponse(object):
 	#  * @return float Total time to load page
 	#  */
     def getTotalTime(self):
-        try: # NOTE: reusing snap of the code from the getHttpStatus function. Is it would be better to make a separate function?
-            is_not_empty = bool(self.__info['total_time'])
-        except KeyError:
-            is_not_empty = False
-        return float(self.__info['total_time']) if is_not_empty else return None
+        return float(self.__info['total_time']) if not helpers.empty(self.__info, 'total_time') else None
 
 
     # TODO: docstringify
 	# /**
 	#  * Parse the HTML content.
 	#  * @return DOMDocument
-	#  */http://stackoverflow.com/questions/38540629/determine-protocol-of-the-link-using-python-alternatives
     def getHtmlDoc(self):
         return self.__doc # NOTE: can return None (see line 44)
 
@@ -163,18 +152,21 @@ class LoadTestingPageResponse(object):
             base = baseElem.get('href')
         else:
             #Check for URLs in the form http://www.domain.com with no trailing slashes
-            pass # TODO: regex or again find?
+            if helpers.isRelativeBase(self.__info['url']):
+                base = self.__info['url']
+            else:
+                pos = self.__info['url'].find('/')
+                if pos >= 0:
+                    base = self.__info['url'][0:pos]
 
 
     # TODO: docstringify
-    # TODO: regex vs find? performance matters
 	# /**
 	#  * Get page protocol (e.g. http or https)
 	#  * @return string Protocol
 	#  */
     def getPageProtocol(self):
-        ind = self.__info['url'].find("://") # not using regex instead searching for index
-        return url[0:ind] if (ind != -1) else 'http'
+        return helpers.detectUrlScheme(self.__info['url'])
 
 
     # TODO: docstringify
@@ -184,6 +176,8 @@ class LoadTestingPageResponse(object):
 	#  */
     def getAbsoluteBase(self):
         #TODO: finish method (bs or lxml)
+        # NOTE: YOU'RE CURRENTLY HERE
+
 
 
     # TODO: docstringify
