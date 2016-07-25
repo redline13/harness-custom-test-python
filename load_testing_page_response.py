@@ -18,7 +18,7 @@ class LoadTestingPageResponse(object):
     # Content
     __content = None
 
-    # DOMDocument of content
+    # BS html page object
     __doc = None
 
     # TODO: docstringify
@@ -158,6 +158,7 @@ class LoadTestingPageResponse(object):
                 pos = self.__info['url'].find('/')
                 if pos >= 0:
                     base = self.__info['url'][0:pos]
+        return base
 
 
     # TODO: docstringify
@@ -175,9 +176,16 @@ class LoadTestingPageResponse(object):
 	#  * @return string Base URL
 	#  */
     def getAbsoluteBase(self):
-        #TODO: finish method (bs or lxml)
-        # NOTE: YOU'RE CURRENTLY HERE
-
+        base = ''
+        baseElem = self.__doc.base
+        if(self.__doc.base):
+            base = baseElem.get('href')
+        else:
+            if helpers.isAbsoluteBase(self.__info['url']):
+                base = self.__info['url']
+        if base and base[-1] == '/':
+            base = base[0:-1]
+        return base
 
 
     # TODO: docstringify
@@ -186,7 +194,26 @@ class LoadTestingPageResponse(object):
 	#  * @return array List of unique links
 	#  */
     def getLinks(self):
-        #TODO: finish method (bs or lxml)
+        abs_base = self.getAbsoluteBase()
+        rel_base = self.getRelativeBase()
+        protocol = self.getPageProtocol()
+
+        link = []
+        link_elems = self.__doc.findAll('a')
+        for link_elem in link_elems:
+            link = link_elem.get('href').strip()
+            if not helpers.empty(link) and link.find('data:') != 0:
+                if helpers.detectUrlScheme(link):
+                    pass
+                elif helpers.detectUrlNetloc(link):
+                    link = "%s:%s" % (protocol, link)
+                elif link[0] == '?' or link[0] == '#':
+                    tmp = self.getCurrentUrl()
+                    pos = tmp.find(link[0])
+                    if pos != -1:
+                        tmp = tmp[0:pos]
+                    link = tmp + link
+                elif #######
 
 
     # TODO: docstringify

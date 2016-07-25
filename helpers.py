@@ -44,9 +44,16 @@ def detectUrlNetloc(url):
 
 # TODO: docstringify
 # detects whether the input url consists
-# only from scheme and netloc 
+# only from scheme and netloc
 def isRelativeBase(url):
     parsed = urlparse.urlparse(url)
-    print(parsed)
     return True if parsed.scheme and parsed.netloc and not \
                 (parsed.path and parsed.params and parsed.query and parsed.fragment) else False
+
+
+# TODO: docstringify
+# detets whether the input url has
+# al least scheme and netloc (isAbsoluteBase)
+def isAbsoluteBase(url):
+    parsed = urlparse.urlparse(url)
+    return True if parsed.scheme and parsed.netloc else False
