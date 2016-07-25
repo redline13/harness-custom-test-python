@@ -316,6 +316,9 @@ class LoadTestingPageResponse(object):
         script_elems = self.__doc.findAll('script')
         for script_elem in script_elems:
             src = self.formatLink(script_elem, 'src')
+            if not src in srcs:
+                srcs.append(src)
+        return srcs
 
 
     # TODO: docstringify
