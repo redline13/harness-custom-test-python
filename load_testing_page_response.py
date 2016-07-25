@@ -9,6 +9,9 @@ from bs4 import BeautifulSoup
 # regex module to match strings
 import re
 
+# to choose random elems
+import random
+
 # Load Testing Page Response
 class LoadTestingPageResponse(object):
 
@@ -147,9 +150,9 @@ class LoadTestingPageResponse(object):
 	#  */
     def getRelativeBase(self):
         base = ''
-        baseElem = self.__doc.base
+        base_elem = self.__doc.base
         if(self.__doc.base):
-            base = baseElem.get('href')
+            base = base_elem.get('href')
         else:
             #Check for URLs in the form http://www.domain.com with no trailing slashes
             if helpers.isRelativeBase(self.__info['url']):
@@ -177,9 +180,9 @@ class LoadTestingPageResponse(object):
 	#  */
     def getAbsoluteBase(self):
         base = ''
-        baseElem = self.__doc.base
+        base_elem = self.__doc.base
         if(self.__doc.base):
-            base = baseElem.get('href')
+            base = base_elem.get('href')
         else:
             if helpers.isAbsoluteBase(self.__info['url']):
                 base = self.__info['url']
@@ -198,22 +201,13 @@ class LoadTestingPageResponse(object):
         rel_base = self.getRelativeBase()
         protocol = self.getPageProtocol()
 
-        link = []
+        links = []
         link_elems = self.__doc.findAll('a')
         for link_elem in link_elems:
-            link = link_elem.get('href').strip()
-            if not helpers.empty(link) and link.find('data:') != 0:
-                if helpers.detectUrlScheme(link):
-                    pass
-                elif helpers.detectUrlNetloc(link):
-                    link = "%s:%s" % (protocol, link)
-                elif link[0] == '?' or link[0] == '#':
-                    tmp = self.getCurrentUrl()
-                    pos = tmp.find(link[0])
-                    if pos != -1:
-                        tmp = tmp[0:pos]
-                    link = tmp + link
-                elif #######
+            link = self.formatLink(link_elem, 'href')
+            if not link in links:
+                links.append(link)
+        return links
 
 
     # TODO: docstringify
@@ -222,7 +216,12 @@ class LoadTestingPageResponse(object):
 	#  * @return array Array of form elements
 	#  */
     def getFormElems(self):
-        #TODO: finish method (bs or lxml)
+        # Find the first non-login form
+        forms = self.__doc.findAll('form')
+        form = None
+        for tmp in forms:
+            if not # TODO: match the behavior of source or not?
+            # NOTE: UNFINISHED
 
 
     # TODO: docstringify
@@ -233,7 +232,10 @@ class LoadTestingPageResponse(object):
     def getFormElemNames(self):
         names = []
         for elem in self.getFormElems():
-            name = # TODO: depends on previous methods (bs or lxml)
+            name = elem.get('name')
+            if name:
+                names.append(name)
+        return names
 
 
     # TODO: docstringify
@@ -242,7 +244,12 @@ class LoadTestingPageResponse(object):
 	#  * @return array Array of submit button texts
 	#  */
     def getSubmitButtonTexts():
-        #TODO: bs/lxml dependant
+        rtn = []
+        tmpl = self.__doc.findAll('input')
+        for tmp2 in tmpl:
+            if tmp2.get('type').lower() == 'submit':
+                rtn.append(tmp2.get('value'))
+        return rtn
 
 
     # TODO: docstringify
@@ -251,8 +258,8 @@ class LoadTestingPageResponse(object):
 	#  * @param DomElement $elem Select box
 	#  * @return string Value
 	#  */
-    def selectDropdownValue( pass ):
-        #TODO: bs/lxml
+    def selectDropdownValue(elem):
+        return elem.findChildren()[random.randrange(len(elem.findChildren()))].get('value')
 
 
     # TODO: docstringify
@@ -260,8 +267,20 @@ class LoadTestingPageResponse(object):
 	#  * Get list of css hrefs on the page.
 	#  * @return array List of unique css hrefs
 	#  */
-    def getCssHrefs():
-        #TODO: bs/lxml
+    def getCssHrefs(self):
+        abs_base = self.getAbsoluteBase()
+        rel_base = self.getRelativeBase()
+        protocol = self.getPageProtocol()
+
+        hrefs = []
+        linkElems = self.__doc.findAll('link')
+        for link_elem in link_elems:
+            # Check if this is a stylesheet
+            if link_elem.get('rel') == 'stylesheet':
+                href = self.formatLink(link_elem, 'href')
+                if not href in hrefs:
+                    hrefs.append(href)
+        return hrefs
 
 
     # TODO: docstringify
@@ -269,8 +288,18 @@ class LoadTestingPageResponse(object):
 	#  * Get list of image href on the page.
 	#  * @return array List of unique image hrefs
 	#  */
-    def getImageHrefs():
-        #TODO: bs/lxml
+    def getImageHrefs(self):
+        abs_base = self.getAbsoluteBase()
+        rel_base = self.getRelativeBase()
+        protocol = self.getPageProtocol()
+
+        srcs = []
+        img_elems = self.__doc.findAll('img')
+        for img_elem in img_elems:
+            src = self.formatLink(img_elem, 'src')
+            if not src in srcs:
+                srcs.append(src)
+        return srcs
 
 
     # TODO: docstringify
@@ -278,5 +307,36 @@ class LoadTestingPageResponse(object):
 	#  * Get list of javascript srcs on the page.
 	#  * @return array List of unique javascript srcs
 	#  */
-    def getJavascriptSrcs():
-        #TODO: bs/lxml
+    def getJavascriptSrcs(self):
+        abs_base = self.getAbsoluteBase()
+        rel_base = self.getRelativeBase()
+        protocol = self.getPageProtocol()
+
+        srcs = []
+        script_elems = self.__doc.findAll('script')
+        for script_elem in script_elems:
+            src = self.formatLink(script_elem, 'src')
+
+
+    # TODO: docstringify
+    # additional function to
+    # incapsulate link formation
+    # that is present in several
+    # get__ functions
+    def formatLink(self, link, attr):
+        link = link_elem.get(attr).strip()
+        if link and link.find('data:') != 0:
+            if helpers.detectUrlScheme(link):
+                return link
+            elif helpers.detectUrlNetloc(link):
+                return "%s:%s" % (protocol, link)
+            elif link[0] == '?' or link[0] == '#':
+                tmp = self.getCurrentUrl()
+                pos = tmp.find(link[0])
+                if pos != -1:
+                    tmp = tmp[0:pos]
+                return tmp + link
+            elif link[0] == '/':
+                return abs_base + link
+            else:
+                return "%s/%s" % (rel_base, link)
