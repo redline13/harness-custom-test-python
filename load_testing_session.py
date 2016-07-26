@@ -17,6 +17,9 @@ import os
 # to store the output of cURL execution
 from StringIO import StringIO
 
+# to use PCRE in this module
+import re
+
 # TODO: docstringify
 # /**
 #  * Load Testing Session is the CURL wrapper.  This is not required but does provide some easy calling and managing of web requests.
@@ -275,4 +278,53 @@ class LoadTestingSession(object):
 	#  * @return string Value, or null
 	#  */
     def getFormAutoValue(name):
-        # TODO: UNFINISHED
+        lower_alpha = 'abcdefghijklmnopqrstuvwxyz'
+
+        # Names
+        if re.match('.*first.*name', name, re.IGNORECASE):
+            return 'Load'
+        elif re.match('.*last.*name', name, re.IGNORECASE):
+            return 'Test%s' % self.__test_num
+        # E-mails
+        elif re.match('.*email', name, re.IGNORECASE):
+            return lower_alpha[random.randrange(25)] + lower_alpha[random.randrange(25)] +
+                    '-LoadTest' + self.__test_num + '-' + time.time() + '@example.com'
+        # Passwords
+        elif re.match('.*password', name, re.IGNORECASE):
+            return 'password'
+        # Address
+        elif re.match('.*address', name, re.IGNORECASE):
+            return self.test_num + ' Load Test Ave.'
+        # City
+        elif re.match('.*city', name, re.IGNORECASE):
+            return 'Moorestown'
+        # Country
+        elif re.match('.*country', name, re.IGNORECASE):
+            return 'US'
+        # State
+        elif re.match('.*state', name, re.IGNORECASE):
+            return 'NJ'
+        # Zip code
+        elif re.match('.*zipcode', name, re.IGNORECASE):
+            return '08057'
+        # Dob (Random)
+        elif re.match('.*dob', name, re.IGNORECASE):
+            return "%i/%i/%i" % (random.randrange(1,12), random.randrange(2,28), \
+                                                random.randrange(1950, 2005))
+        # Phone (Random)
+        elif re.match('.*phone', name, re.IGNORECASE):
+            return "%i-555-%04d" % (random.randrange(100, 999), random.randrange(0, 9999))
+        # Gender (Random)
+        elif re.match('.*gender', name, re.IGNORECASE):
+            return 'M' if random.getrandbits(1) else 'F'
+        # Credit card info
+        elif re.match('.*cardNumber', name, re.IGNORECASE):
+            return '4111111111111111'
+        elif re.match('.*cvv', name, re.IGNORECASE):
+            return '123'
+        elif re.match('.*cardExpiresMonth', name, re.IGNORECASE):
+            return random.randrange(1,12)
+        elif re.match('.*cardExpiresYear', name, re.IGNORECASE):
+            return 2050
+
+        return None
