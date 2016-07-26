@@ -127,7 +127,7 @@ class LoadTestingPageResponse(object):
 
 
     # TODO: docstringify
-    # /**
+    # /**Overview
 	#  * Get total time to load page
 	#  * @return float Total time to load page
 	#  */
@@ -220,8 +220,23 @@ class LoadTestingPageResponse(object):
         forms = self.__doc.findAll('form')
         form = None
         for tmp in forms:
-            if not # TODO: match the behavior of source or not?
-            # NOTE: UNFINISHED
+            if not re.match('login', tmp.get('action')):
+                form = tmp
+                break
+        elems = []
+        tmp1 = self.__doc.findAll('input')
+        for tmp2 in tmp1:
+            elems.append(tmp2)
+        tmp1 = self.__doc.findAll('textarea')
+        for tmp2 in tmp1:
+            elems.append(tmp2)
+        tmp1 = self.__doc.findAll('select')
+        for tmp2 in tmp1:
+            elems.append(tmp2)
+        tmp1 = self.__doc.findAll('button')
+        for tmp2 in tmp1:
+            elems.append(tmp2)
+        return elems
 
 
     # TODO: docstringify
