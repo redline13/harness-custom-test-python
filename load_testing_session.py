@@ -2,6 +2,15 @@
 
 import load_testing_page_response
 
+# to use static_vars functionality
+import helpers
+
+# to print out error
+import traceback
+
+# Human readable print functions
+import pprint
+
 # to use seed() function
 import random
 
@@ -42,6 +51,10 @@ class LoadTestingSession(object):
 
     # Verbose flag
     VERBOSE = 0x00000002
+
+    # File output format
+    FILE_OUT_FORMAT = "%s%stest%i-rawData%i-%s.txt" % (self.__output_dir, os.pathsep, \
+                self.__test_num, fetchRawDataFromUrl.page_num, "info")
 
     # TODO: docstringify
 	# /**
@@ -211,12 +224,14 @@ class LoadTestingSession(object):
 	#  * @return string Raw response
 	#  * @throws Exception
 	#  */
+    @helpers.static_vars(page_num=0)
     def fetchRawDataFromUrl(self, url, post = None, headers = [], `save_data` = False):
         # Set referer
         if self.__last_url:
             self.__ch.setopt(pycurl.REFERER, self.__last_url)
         self.__last_url = url
 
+        # Set post info
         if post:
             self.__ch.setopt(pycurl.POST, 1)
             self.__ch.setopt(pycurl.POSTFIELDS, post)
@@ -237,8 +252,16 @@ class LoadTestingSession(object):
 
         # Save data
         if save_data:
-            # TODO: UNI
+            fetchRawDataFromUrl.page_num += 1
+            # NOTE: INFINISHED INFO OUT
+            with open(FILE_OUT_FORMAT % (self.__output_dir, os.pathsep, \
+                        self.__test_num, fetchRawDataFromUrl.page_num, "info"), "w") as f:
+                f.write(pprint.pprint(<>)+pprint.pprint(self.__last_resp_headers))
+            with open(FILE_OUT_FORMAT % (self.__output_dir, os.pathsep, \
+                        self.__test_num, fetchRawDataFromUrl.page_num, "content"), "w") as f:
+                f.write(content)
 
+        return content
 
 
     # TODO: docstringify
@@ -270,7 +293,79 @@ class LoadTestingSession(object):
 	#  * @throws Exception
 	#  */
     def goToUrl(self, url, post = None, headers = [], saveData = False, is_user = True):
-        # TODO: UNFINISHED
+        # Add slight delay to simulate user delay
+        if self.__min_delay or self.__max_delay:
+            delay = random.randrange(self.__min_delay*1000, self.__max_delay*1000)
+            self.__delay = (delay/1000000)
+            if self.__flags & self.VERBOSE:
+                echo 'Delay: %is' % (delay/1000000)
+            time.sleep(delay/1000000)
+
+        # Set referer
+        if self.__last_url:
+            self.__ch.setopt(pycurl.REFERER, self.__last_url)
+        self.__last_url = url
+
+        rtn = LoadTestingPageResponse()
+
+        # Set post info
+        if post:
+            self.__ch.setopt(pycurl.POST, 1)
+            self.__ch.setopt(pycurl.POSTFIELDS, post)
+        else:
+            self.__ch.setopt(pycurl.POST, 0)
+
+        # Set up headers
+        self.__ch.setopt(HTTPHEADER, headers)
+
+        # Get page
+        if self.__flags & self.VERBOSE:
+            print(datetime.date.today().strftime("%m/%d/%Y %-H:%M:%S"))
+        self.__ch.setopt(pycurl.URL, url)
+        self.__last_resp_headers = [] # Clear last response headers
+        start_time = time.time()
+        try:
+            content = self.__ch.perform()
+        except pycurl.error:
+            end_time = time.time()
+            total_time = end_time - start_time
+            if is_user:
+                recordPageTime(end_time, total_time, True, 0) # NOTE: located in run_load_test.py
+            recordURLPageLoad(self.removeQueryStringAndFragmentFromUrl(url),end_time, total_time, True, 0)
+            traceback.print_exc() # throw last error
+        curl_info = # NOTE: CAN'T FIGURE OUT HOW TO GET IT
+        rtn.setContent(content, curl_info['content_type'])
+
+        # Get info
+        rtn.setInfo(curl_info)
+        if self.__flags & self.VERBOSE:
+            print(datetime.date.today().strftime("%m/%d/%Y %-H:%M:%S"))
+
+        # Record bandwidth
+        info = rtn.getInfo()
+        kb = 0
+        if info['download_content_length'] > 0:
+            kb = int(info['download_content_length'])/1024
+        elif info['size_download'] > 0:
+            kb = int(infp['size_download'])/1024
+
+        # Check response code
+        resp_code = rtn.getHttpStatus()
+        resp_error = False
+        if not (resp_code >= 200 && resp_code <= 399):
+            resp_error = True
+
+        # Record info
+        end_time = time.time()
+        total_time = rtn.getTotalTime()
+        if is_user:
+            recordPageTime(end_time, total_time, resp_error, 0)
+        recordURLPageLoad(self.removeQueryStringAndFragmentFromUrl(url), end_time, total_time, resp_error, kb)
+
+        # Save files
+        if save_data:
+            # TODO: unfinished
+            # TODO: revise code formatting (is it too long sometimes?)
 
 
     # TODO: docstringify

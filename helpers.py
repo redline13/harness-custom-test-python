@@ -57,3 +57,15 @@ def isRelativeBase(url):
 def isAbsoluteBase(url):
     parsed = urlparse.urlparse(url)
     return True if parsed.scheme and parsed.netloc else False
+
+@helpers.tatic_vars(counter=0)
+# TODO: docstringify
+# the workaround to add php's static
+# function variables functionality to
+# python functions. It's a decorator.
+def static_vars(**kwargs):
+    def decorate(func):
+        for k in kwargs:
+            setattr(func, k, kwargs[k])
+        return func
+    return decorate
