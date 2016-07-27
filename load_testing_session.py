@@ -37,54 +37,11 @@ import re
 #  */
 class LoadTestingSession(object):
 
-    # Test Number
-    __test_num = None
-
-    # Random token for test
-    __rand = None
-
-    # Cookie directory
-    __cookie_dir = None
-
-    # Output directory
-    __output_dir = None
-
-    # Flags
-    __flags = None
-
     # Load Resources flag
     LOAD_RESOURCES = 0x00000001
 
     # Verbose flag
     VERBOSE = 0x00000002
-
-    # Curl handle
-    __ch = None
-
-    # Cookie jar (i.e. filename)
-    __cookie_jar = None
-
-    # Last response headers
-    __last_resp_headers = []
-
-    # Last URL
-    __last_url = None
-
-    # Min. delay (in ms) after fetching page
-    __min_delay = 0
-    # Max. delay (in ms) after fetching page
-    __max_delay = 0
-    # Track last used delay
-    __delay = None
-
-    # Resource cache
-    __resource_cache = [] # NOTE: array or map?
-
-    # Resource data
-    __resource_data = [] # NOTE: array or map?
-
-    # Base url that resources will be loaded for
-    loadable_resource_base_url = None
 
     # TODO: docstringify
 	# /**
@@ -95,15 +52,48 @@ class LoadTestingSession(object):
 	#  * @param string $outputDir Output directory (default: 'output')
 	#  */
     def __init__(self, test_num, rand, cookie_dir = 'cookies', output_dir = 'output'):
+
+        # Flags
+        __flags = None
+
+        # Test Number
         self.__test_num = test_num
+
+        # Random token for test
         self.__rand = rand
+
+        # Cookie directory
         self.__cookie_dir = cookie_dir
+
+        # Output directory
         self.__output_dir = output_dir
+
+        # Last response headers
+        self.__last_resp_headers = []
+
+        # Last URL
+        self.__last_url = None
+
+        # Min. delay (in ms) after fetching page
+        self.__min_delay = 0
+        # Max. delay (in ms) after fetching page
+        self.__max_delay = 0
+        # Track last used delay
+        self.__delay = None
+
+        # Resource cache
+        self.__resource_cache = [] # NOTE: array or map?
+
+        # Resource data
+        self.__resource_data = [] # NOTE: array or map?
+
+        # Base url that resources will be loaded for
+        self.loadable_resource_base_url = None
 
         # Seed random number generate
         random.seed(test_num * time.time())
 
-        # Set up curl
+        # Set up curl handle
         self.__ch = pycurl.Curl()
 
         # TODO: UNFINISHED
@@ -114,37 +104,34 @@ class LoadTestingSession(object):
         # "Setup curl_exec to return output"
 
         # Don't include HTTP headers in output
-        self.__ch.setopt()
+        self.__ch.setopt(pycurl.HEADER, 0)
 
         # Set up function to get headers
-        self.__ch.setopt()
+        self.__ch.setopt(pycurl.HEADERFUNCTION, self.getLastCurlRespHeaders)
 
         # Include request header in curl info
-        self.__ch.setopt()
+        # http://stackoverflow.com/questions/11280684/what-is-the-use-of-pycurl-infotype-header-out
+        # NOTE: CURLINFO_HEADER_OUT can't be specified as an option
 
         # Follow redirects
-        self.__ch.setopt()
+        self.__ch.setopt(pycurl.FOLLOWLOCATION, 1)
 
         # Don't use persist connection
-        self.__ch.setopt()
+        self.__ch.setopt(pycurl.FRESH_CONNECT, 1)
 
         # Enable compression
-        self.__ch.setopt()
+        self.__ch.setopt(pycurl.ENCODING, '')
 
         # Timeouts
-        self.__ch.setopt()
-        self.__ch.setopt()
+        self.__ch.setopt(pycurl.CONNECTTIMEOUT, 30)
+        self.__ch.setopt(pycurl.TIMEOUT, 120)
 
-        # Set cookie jar
-        self.__cookie_jar = ##
-        self.__ch.setopt()
+        # Set cookie jar (i.e. filename)
+        self.__cookie_jar = os.tempnam(self.__cookie_dir, 'cookie-')
+        self.__ch.setopt(pycurl.COOKIEJAR, self.__cookie_jar)
 
         # Don't check SSL
-        self.__ch.setopt()
-
-
-    # NOTE: no need in __get func as
-    # __* vars can be accessed directly?
+        self.__ch.setopt(pycurl.SSL_VERIFYPEER, 0)
 
 
     # Enable resource loading
@@ -224,10 +211,34 @@ class LoadTestingSession(object):
 	#  * @return string Raw response
 	#  * @throws Exception
 	#  */
-    def fetchRawDataFromUrl(self, url, post = None, headers = [], saveData = False):
+    def fetchRawDataFromUrl(self, url, post = None, headers = [], `save_data` = False):
         # Set referer
         if self.__last_url:
-            ### TODO: NOT FINISHED
+            self.__ch.setopt(pycurl.REFERER, self.__last_url)
+        self.__last_url = url
+
+        if post:
+            self.__ch.setopt(pycurl.POST, 1)
+            self.__ch.setopt(pycurl.POSTFIELDS, post)
+        else:
+            self.__ch.setopt(pycurl.POST, 0)
+
+        # Set up headers
+        self.__ch.setopt(HTTPHEADER, headers)
+
+        # Get page
+        self.__ch.setopt(pycurl.URL, url)
+        self.__last_resp_headers = [] # Clear last response headers
+
+        # Setting up a buffer to write out response
+        content = StringIO()
+        self.__ch.setopt(pycurl.WRITEDATA, content)
+        self.__ch.perform() # throws Error upon failure
+
+        # Save data
+        if save_data:
+            # TODO: UNI
+
 
 
     # TODO: docstringify
@@ -268,7 +279,28 @@ class LoadTestingSession(object):
 	#  * @param LoadTestingPageResponse $page Page object
 	#  */
     def loadResources(page):
-        # TODO: UNFINISHED
+        if self.loadable_resource_base_url:
+            resources = [] # TODO: assuming it's list
+
+            # Get CSS hrefs
+            for href in page.getCssHrefs():
+                if href.find(self.loadable_resource_base_url) == 0:
+                    resources.append(href)
+
+            # Get image hrefs
+            for href in page.getImageHrefs():
+                if href.find(self.loadable_resource_base_url) == 0:
+                    resources.append(href)
+
+            # Get javascript srcs
+            for src in page.getJavascriptSrcs():
+                if src.find(self.loadable_resource_base_url) == 0:
+                    resources.append(src)
+
+            # Set up new curl object
+            ch = pycurl.Curl()
+            if resources and ch:
+                # Set options
 
 
     # TODO: docstringify

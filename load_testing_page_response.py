@@ -15,14 +15,17 @@ import random
 # Load Testing Page Response
 class LoadTestingPageResponse(object):
 
-    # Request information
-    __info = {}
+    def __init__(self):
 
-    # Content
-    __content = None
+        # Request information
+        self.__info = {}
 
-    # BS html page object
-    __doc = None
+        # Content
+        self.__content = None
+
+        # BS html page object
+        self.__doc = None
+
 
     # TODO: docstringify
     # /**
