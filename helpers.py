@@ -31,21 +31,21 @@ def empty(lst, key):
 # TODO: docstringify
 # returns a protocol that is used to access
 # the input url
-def detectUrlScheme(url):
+def detect_url_scheme(url):
     return urlparse.urlparse(url).scheme
 
 
 # TODO: docstringify
 # returns a base part of a link (url netloc)
 # given an url as input
-def detectUrlNetloc(url):
+def detect_url_netloc(url):
     return urlparse.urlparse(url).netloc
 
 
 # TODO: docstringify
 # detects whether the input url consists
 # only from scheme and netloc
-def isRelativeBase(url):
+def is_relative_base(url):
     parsed = urlparse.urlparse(url)
     return True if parsed.scheme and parsed.netloc and not \
                 (parsed.path and parsed.params and parsed.query and parsed.fragment) else False
@@ -54,11 +54,11 @@ def isRelativeBase(url):
 # TODO: docstringify
 # detets whether the input url has
 # al least scheme and netloc (isAbsoluteBase)
-def isAbsoluteBase(url):
+def is_absolute_base(url):
     parsed = urlparse.urlparse(url)
     return True if parsed.scheme and parsed.netloc else False
 
-@helpers.tatic_vars(counter=0)
+
 # TODO: docstringify
 # the workaround to add php's static
 # function variables functionality to

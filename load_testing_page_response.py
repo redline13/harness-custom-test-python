@@ -32,11 +32,11 @@ class LoadTestingPageResponse(object):
 	#  * Set the curl info for the page
 	#  * @param string Curl info
 	#  */
-    def setInfo(self, info):
+    def set_info(self, info):
         self.__info = info
 
         # Output timing info
-        print( "%s: %fs" % (self.getCurrentUrl(), self.getTotalTime()) )
+        print( "%s: %fs" % (self.get_current_url(), self.get_total_time()) )
 
 
     # TODO: docstringify
@@ -44,7 +44,7 @@ class LoadTestingPageResponse(object):
 	#  * Get the curl info for the page
 	#  * @return string Curl info
 	#  */
-    def getInfo(self):
+    def get_info(self):
         return self.__info
 
 
@@ -56,7 +56,7 @@ class LoadTestingPageResponse(object):
 	#  * @param string $contentType Optional content type.  If not detected as HTML,
 	#  * 	it wil not be loaded.
 	#  */
-    def setContent(self, content, content_type = None):
+    def set_content(self, content, content_type = None):
         self.__content = content
         accpt_cont_types = ['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml']
         if not content_type or content_type in accpt_cont_types:
@@ -68,7 +68,7 @@ class LoadTestingPageResponse(object):
 	#  * Get the page content.
 	#  * @return string Page content
 	#  */
-    def getContent(self):
+    def get_content(self):
         return self.content
 
 
@@ -77,7 +77,7 @@ class LoadTestingPageResponse(object):
 	#  * Get HTTP status code
 	#  * @return int HTTP status code
 	#  */
-    def getHttpStatus(self):
+    def get_http_status(self):
         return int(self.__info['http_code']) if not helpers.empty(self.__info, 'http_code') else None
 
 
@@ -86,8 +86,8 @@ class LoadTestingPageResponse(object):
 	#  * Check if there was an error
 	#  * @return bool True if this looks like there was an error
 	#  */
-    def hasError(self):
-        if not (self.getHttpStatus() == 200):
+    def has_error(self):
+        if not (self.get_http_status() == 200):
             return True
 
 
@@ -96,7 +96,7 @@ class LoadTestingPageResponse(object):
 	#  * Get error message returned to user
 	#  * @return string Error message returned to the user
 	#  */
-    def getUserErrorMessage(self):
+    def get_user_error_message(self):
 
         # Add application specific code here to get an application specific error message
 
@@ -108,7 +108,7 @@ class LoadTestingPageResponse(object):
 	#  * Check if the page appears as though a POST form submission succeeded
 	#  * @return bool True if this looks like a POST form successful submission
 	#  */
-    def isPlausibleSuccessfulPost(self):
+    def is_plausible_successful_post(self):
 
         # Application specific code here
 
@@ -117,7 +117,7 @@ class LoadTestingPageResponse(object):
         except ValueError, KeyError:
             is_redirect_count_positive = False
 
-        return not self.hasError() and is_redirect_count_positive
+        return not self.has_error() and is_redirect_count_positive
 
 
     # TODO: docstringify
@@ -125,7 +125,7 @@ class LoadTestingPageResponse(object):
 	#  * Get current URL
 	#  * @return string Current URL
 	#  */
-    def getCurrentUrl():
+    def get_current_url():
         return int(self.__info['url']) if not helpers.empty(self.__info, 'url') else None
 
 
@@ -142,8 +142,8 @@ class LoadTestingPageResponse(object):
 	# /**
 	#  * Parse the HTML content.
 	#  * @return DOMDocument
-    def getHtmlDoc(self):
-        return self.__doc # NOTE: can return None (see line 44)
+    def get_html_doc(self):
+        return self.__doc # NOTE: can return None (see line 52)
 
 
     # TODO: docstringify
@@ -151,14 +151,14 @@ class LoadTestingPageResponse(object):
 	#  * Get base URL
 	#  * @return string Base URL
 	#  */
-    def getRelativeBase(self):
+    def get_relative_base(self):
         base = ''
         base_elem = self.__doc.base
         if(self.__doc.base):
             base = base_elem.get('href')
         else:
             #Check for URLs in the form http://www.domain.com with no trailing slashes
-            if helpers.isRelativeBase(self.__info['url']):
+            if helpers.is_relative_base(self.__info['url']):
                 base = self.__info['url']
             else:
                 pos = self.__info['url'].find('/')
@@ -172,8 +172,8 @@ class LoadTestingPageResponse(object):
 	#  * Get page protocol (e.g. http or https)
 	#  * @return string Protocol
 	#  */
-    def getPageProtocol(self):
-        return helpers.detectUrlScheme(self.__info['url'])
+    def get_page_protocol(self):
+        return helpers.detect_url_scheme(self.__info['url'])
 
 
     # TODO: docstringify
@@ -181,13 +181,13 @@ class LoadTestingPageResponse(object):
 	#  * Get base host
 	#  * @return string Base URL
 	#  */
-    def getAbsoluteBase(self):
+    def get_absolute_base(self):
         base = ''
         base_elem = self.__doc.base
         if(self.__doc.base):
             base = base_elem.get('href')
         else:
-            if helpers.isAbsoluteBase(self.__info['url']):
+            if helpers.is_absolute_base(self.__info['url']):
                 base = self.__info['url']
         if base and base[-1] == '/':
             base = base[0:-1]
@@ -199,15 +199,15 @@ class LoadTestingPageResponse(object):
 	#  * Get list of links on the page.
 	#  * @return array List of unique links
 	#  */
-    def getLinks(self):
-        abs_base = self.getAbsoluteBase()
-        rel_base = self.getRelativeBase()
-        protocol = self.getPageProtocol()
+    def get_links(self):
+        abs_base = self.get_absolute_base()
+        rel_base = self.get_relative_base()
+        protocol = self.get_page_protocol()
 
         links = []
         link_elems = self.__doc.findAll('a')
         for link_elem in link_elems:
-            link = self.formatLink(link_elem, 'href')
+            link = self.format_link(link_elem, 'href')
             if not link in links:
                 links.append(link)
         return links
@@ -218,7 +218,7 @@ class LoadTestingPageResponse(object):
 	#  * Get form elements.
 	#  * @return array Array of form elements
 	#  */
-    def getFormElems(self):
+    def get_form_elems(self):
         # Find the first non-login form
         forms = self.__doc.findAll('form')
         form = None
@@ -247,9 +247,9 @@ class LoadTestingPageResponse(object):
 	#  * Get form elements names.
 	#  * @return array Array of form element names.
 	#  */
-    def getFormElemNames(self):
+    def get_form_elem_names(self):
         names = []
-        for elem in self.getFormElems():
+        for elem in self.get_form_elems():
             name = elem.get('name')
             if name:
                 names.append(name)
@@ -261,7 +261,7 @@ class LoadTestingPageResponse(object):
 	#  * Get submit button texts
 	#  * @return array Array of submit button texts
 	#  */
-    def getSubmitButtonTexts():
+    def get_submit_button_texts():
         rtn = []
         tmpl = self.__doc.findAll('input')
         for tmp2 in tmpl:
@@ -276,7 +276,7 @@ class LoadTestingPageResponse(object):
 	#  * @param DomElement $elem Select box
 	#  * @return string Value
 	#  */
-    def selectDropdownValue(elem):
+    def select_dropdown_value(elem):
         return elem.findChildren()[random.randrange(len(elem.findChildren()))].get('value')
 
 
@@ -285,17 +285,17 @@ class LoadTestingPageResponse(object):
 	#  * Get list of css hrefs on the page.
 	#  * @return array List of unique css hrefs
 	#  */
-    def getCssHrefs(self):
-        abs_base = self.getAbsoluteBase()
-        rel_base = self.getRelativeBase()
-        protocol = self.getPageProtocol()
+    def get_css_hrefs(self):
+        abs_base = self.get_absolute_base()
+        rel_base = self.get_relative_base()
+        protocol = self.get_page_protocol()
 
         hrefs = []
         linkElems = self.__doc.findAll('link')
         for link_elem in link_elems:
             # Check if this is a stylesheet
             if link_elem.get('rel') == 'stylesheet':
-                href = self.formatLink(link_elem, 'href')
+                href = self.format_link(link_elem, 'href')
                 if not href in hrefs:
                     hrefs.append(href)
         return hrefs
@@ -306,15 +306,15 @@ class LoadTestingPageResponse(object):
 	#  * Get list of image href on the page.
 	#  * @return array List of unique image hrefs
 	#  */
-    def getImageHrefs(self):
-        abs_base = self.getAbsoluteBase()
-        rel_base = self.getRelativeBase()
-        protocol = self.getPageProtocol()
+    def get_image_hrefs(self):
+        abs_base = self.get_absolute_base()
+        rel_base = self.get_relative_base()
+        protocol = self.get_page_protocol()
 
         srcs = []
         img_elems = self.__doc.findAll('img')
         for img_elem in img_elems:
-            src = self.formatLink(img_elem, 'src')
+            src = self.format_link(img_elem, 'src')
             if not src in srcs:
                 srcs.append(src)
         return srcs
@@ -325,15 +325,15 @@ class LoadTestingPageResponse(object):
 	#  * Get list of javascript srcs on the page.
 	#  * @return array List of unique javascript srcs
 	#  */
-    def getJavascriptSrcs(self):
-        abs_base = self.getAbsoluteBase()
-        rel_base = self.getRelativeBase()
-        protocol = self.getPageProtocol()
+    def get_javascript_srcs(self):
+        abs_base = self.get_absolute_base()
+        rel_base = self.get_relative_base()
+        protocol = self.get_page_protocol()
 
         srcs = []
         script_elems = self.__doc.findAll('script')
         for script_elem in script_elems:
-            src = self.formatLink(script_elem, 'src')
+            src = self.format_link(script_elem, 'src')
             if not src in srcs:
                 srcs.append(src)
         return srcs
@@ -344,15 +344,15 @@ class LoadTestingPageResponse(object):
     # incapsulate link formation
     # that is present in several
     # get__ functions
-    def formatLink(self, link, attr):
+    def format_link(self, link, attr):
         link = link_elem.get(attr).strip()
         if link and link.find('data:') != 0:
-            if helpers.detectUrlScheme(link):
+            if helpers.detect_url_scheme(link):
                 return link
-            elif helpers.detectUrlNetloc(link):
+            elif helpers.detect_url_netloc(link):
                 return "%s:%s" % (protocol, link)
             elif link[0] == '?' or link[0] == '#':
-                tmp = self.getCurrentUrl()
+                tmp = self.get_current_url()
                 pos = tmp.find(link[0])
                 if pos != -1:
                     tmp = tmp[0:pos]

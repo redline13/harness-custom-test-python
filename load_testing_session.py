@@ -24,7 +24,10 @@ import pycurl
 import os
 
 # to store the output of cURL execution
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 # to use PCRE in this module
 import re
@@ -53,8 +56,8 @@ class LoadTestingSession(object):
     VERBOSE = 0x00000002
 
     # File output format
-    FILE_OUT_FORMAT = "%s%stest%i-rawData%i-%s.txt" % (self.__output_dir, os.pathsep, \
-                self.__test_num, fetchRawDataFromUrl.page_num, "info")
+    FILE_OUT_FORMAT = "%s%stest%i-%s%i-%s.txt" % (self.__output_dir, os.pathsep, \
+                self.__test_num, fetch_raw_data_from_url.page_num, "info")
 
     # TODO: docstringify
 	# /**
@@ -109,22 +112,11 @@ class LoadTestingSession(object):
         # Set up curl handle
         self.__ch = pycurl.Curl()
 
-        # TODO: UNFINISHED
-
-        # NOTE: no need as pycurl should store
-        # the output in the StringIO buffer
-        # and it's the only choice
-        # "Setup curl_exec to return output"
-
         # Don't include HTTP headers in output
         self.__ch.setopt(pycurl.HEADER, 0)
 
         # Set up function to get headers
-        self.__ch.setopt(pycurl.HEADERFUNCTION, self.getLastCurlRespHeaders)
-
-        # Include request header in curl info
-        # http://stackoverflow.com/questions/11280684/what-is-the-use-of-pycurl-infotype-header-out
-        # NOTE: CURLINFO_HEADER_OUT can't be specified as an option
+        self.__ch.setopt(pycurl.HEADERFUNCTION, self.get_last_curl_resp_headers)
 
         # Follow redirects
         self.__ch.setopt(pycurl.FOLLOWLOCATION, 1)
@@ -148,12 +140,12 @@ class LoadTestingSession(object):
 
 
     # Enable resource loading
-    def enableResourceLoading(self):
+    def enable_resource_loading(self):
         self.__flags |= self.LOAD_RESOURCES
 
 
     # Disable resource loading
-    def disableResourceLoading(self):
+    def disable_resource_loading(self):
         self.__flags |= ~self.LOAD_RESOURCES
 
 
@@ -166,7 +158,7 @@ class LoadTestingSession(object):
 
 
     # Non-verbose
-    def nonVerbose(self):
+    def non_verbose(self):
         self.__flags &= ~self.VERBOSE
 
 
@@ -176,7 +168,7 @@ class LoadTestingSession(object):
 	#  * @param int $minDelay Min. artificial delay (in ms) on page load.
 	#  * @param int $maxDelay Max. artificial delay (in ms) on page load.
 	#  */
-    def setDelay(self, min_delay, max_delay):
+    def set_delay(self, min_delay, max_delay):
         if min_delay > max_delay:
             swap = min_delay
             min_delay = max_delay
@@ -191,7 +183,7 @@ class LoadTestingSession(object):
 	# /**
 	#  * Send back recently used delay value.
 	#  */
-    def getDelay(self):
+    def get_delay(self):
         return self.__delay
 
 
@@ -209,7 +201,7 @@ class LoadTestingSession(object):
     # /**
 	#  * Set last curl response headers
 	#  */
-    def getLastCurlRespHeaders(self, ch, header):
+    def get_last_curl_resp_headers(self, ch, header):
         self.__last_resp_headers.append(header.strip())
         return len(header)
 
@@ -225,7 +217,7 @@ class LoadTestingSession(object):
 	#  * @throws Exception
 	#  */
     @helpers.static_vars(page_num=0)
-    def fetchRawDataFromUrl(self, url, post = None, headers = [], `save_data` = False):
+    def fetch_raw_data_from_url(self, url, post = None, headers = [], save_data = False):
         # Set referer
         if self.__last_url:
             self.__ch.setopt(pycurl.REFERER, self.__last_url)
@@ -252,13 +244,13 @@ class LoadTestingSession(object):
 
         # Save data
         if save_data:
-            fetchRawDataFromUrl.page_num += 1
+            fetch_raw_data_from_url.page_num += 1
             # NOTE: INFINISHED INFO OUT
             with open(FILE_OUT_FORMAT % (self.__output_dir, os.pathsep, \
-                        self.__test_num, fetchRawDataFromUrl.page_num, "info"), "w") as f:
+                        self.__test_num, 'rawData', fetch_raw_data_from_url.page_num, "info"), "w") as f:
                 f.write(pprint.pprint(<>)+pprint.pprint(self.__last_resp_headers))
             with open(FILE_OUT_FORMAT % (self.__output_dir, os.pathsep, \
-                        self.__test_num, fetchRawDataFromUrl.page_num, "content"), "w") as f:
+                        self.__test_num, 'rawData', fetch_raw_data_from_url.page_num, "content"), "w") as f:
                 f.write(content)
 
         return content
@@ -272,7 +264,7 @@ class LoadTestingSession(object):
 	#  *
 	#  * @return string URL without query string and fragment
 	#  */
-    def removeQueryStringAndFragmentFromUrl(url):
+    def remove_query_string_and_fragment_from_url(url):
         pos = url.find('?')
         if not pos == -1:
             return url[0:pos]
@@ -292,7 +284,8 @@ class LoadTestingSession(object):
 	#  * @return LoadTestingPageResponse
 	#  * @throws Exception
 	#  */
-    def goToUrl(self, url, post = None, headers = [], saveData = False, is_user = True):
+    @helpers.static_vars(page_num=0)
+    def go_to_url(self, url, post = None, headers = [], save_data = False, is_user = True):
         # Add slight delay to simulate user delay
         if self.__min_delay or self.__max_delay:
             delay = random.randrange(self.__min_delay*1000, self.__max_delay*1000)
@@ -330,19 +323,20 @@ class LoadTestingSession(object):
             end_time = time.time()
             total_time = end_time - start_time
             if is_user:
-                recordPageTime(end_time, total_time, True, 0) # NOTE: located in run_load_test.py
-            recordURLPageLoad(self.removeQueryStringAndFragmentFromUrl(url),end_time, total_time, True, 0)
+                record_page_time(end_time, total_time, True, 0) # NOTE: located in run_load_test.py
+            record_url_page_load(self.remove_query_string_and_fragment_from_url(url), \
+                                                    end_time, total_time, True, 0)
             traceback.print_exc() # throw last error
         curl_info = # NOTE: CAN'T FIGURE OUT HOW TO GET IT
-        rtn.setContent(content, curl_info['content_type'])
+        rtn.set_content(content, curl_info['content_type'])
 
         # Get info
-        rtn.setInfo(curl_info)
+        rtn.set_info(curl_info)
         if self.__flags & self.VERBOSE:
             print(datetime.date.today().strftime("%m/%d/%Y %-H:%M:%S"))
 
         # Record bandwidth
-        info = rtn.getInfo()
+        info = rtn.get_info()
         kb = 0
         if info['download_content_length'] > 0:
             kb = int(info['download_content_length'])/1024
@@ -350,22 +344,29 @@ class LoadTestingSession(object):
             kb = int(infp['size_download'])/1024
 
         # Check response code
-        resp_code = rtn.getHttpStatus()
+        resp_code = rtn.get_http_status()
         resp_error = False
         if not (resp_code >= 200 && resp_code <= 399):
             resp_error = True
 
         # Record info
         end_time = time.time()
-        total_time = rtn.getTotalTime()
+        total_time = rtn.get_total_time()
         if is_user:
-            recordPageTime(end_time, total_time, resp_error, 0)
-        recordURLPageLoad(self.removeQueryStringAndFragmentFromUrl(url), end_time, total_time, resp_error, kb)
+            record_page_time(end_time, total_time, resp_error, 0)
+        record_url_page_load(self.remove_query_string_and_fragment_from_url(url), \
+                                            end_time, total_time, resp_error, kb)
 
         # Save files
         if save_data:
-            # TODO: unfinished
-            # TODO: revise code formatting (is it too long sometimes?)
+            go_to_url.page_num += 1
+            with open(FILE_OUT_FORMAT % (self.__output_dir, os.pathsep, \
+                        self.__test_num, 'page', go_to_url.page_num, "info"), "w") as f:
+                f.write(pprint.pprint(rtn.get_info())+pprint.pprint(self.__last_resp_headers))
+            with open(FILE_OUT_FORMAT % (self.__output_dir, os.pathsep, \
+                        self.__test_num, 'page', go_to_url.page_num, "content"), "w") as f:
+                f.write(rtn.get_content())
+
 
 
     # TODO: docstringify
@@ -373,22 +374,22 @@ class LoadTestingSession(object):
 	#  * Parse page and request other resources
 	#  * @param LoadTestingPageResponse $page Page object
 	#  */
-    def loadResources(page):
+    def load_resources(page):
         if self.loadable_resource_base_url:
             resources = [] # TODO: assuming it's list
 
             # Get CSS hrefs
-            for href in page.getCssHrefs():
+            for href in page.get_css_hrefs():
                 if href.find(self.loadable_resource_base_url) == 0:
                     resources.append(href)
 
             # Get image hrefs
-            for href in page.getImageHrefs():
+            for href in page.get_image_hrefs():
                 if href.find(self.loadable_resource_base_url) == 0:
                     resources.append(href)
 
             # Get javascript srcs
-            for src in page.getJavascriptSrcs():
+            for src in page.get_javascript_srcs():
                 if src.find(self.loadable_resource_base_url) == 0:
                     resources.append(src)
 
@@ -404,7 +405,7 @@ class LoadTestingSession(object):
 	#  * @param string $name Field name
 	#  * @return string Value, or null
 	#  */
-    def getFormAutoValue(name):
+    def get_form_auto_value(name):
         lower_alpha = 'abcdefghijklmnopqrstuvwxyz'
 
         # Names
