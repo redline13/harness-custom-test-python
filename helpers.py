@@ -86,10 +86,18 @@ def static_vars(**kwargs):
 
 # TODO: docstringify
 # isset() function to check for a passed
-# key presence in a passed in dictionary
-def isset(lst, key):
+# key presence in a passed in dictionary.
+# Also check for a sub key presence (key
+# of a dict that is a value of a first
+# passed in key)
+def isset(lst, key, subkey = None):
     try:
         lst[key]
+        if subkey:
+            try:
+                lst[key][subkey]
+            except TypeError:
+                return False
         return True
     except KeyError:
         return False

@@ -17,6 +17,9 @@ import random
 # to use time() function
 import time
 
+# to cast string to time
+import datetime
+
 # python cURL binders
 import pycurl
 
@@ -31,6 +34,9 @@ except ImportError:
 
 # to use PCRE in this module
 import re
+
+# to be able to encode into json
+import json
 
 # TODO: docstringify
 # /**
@@ -107,10 +113,10 @@ class LoadTestingSession(object):
         self.__delay = None
 
         # Resource cache
-        self.__resource_cache = [] # NOTE: array or map?
+        self.__resource_cache = {}
 
         # Resource data
-        self.__resource_data = [] # NOTE: array or map?
+        self.__resource_data = {}
 
         # Base url that resources will be loaded for
         self.loadable_resource_base_url = None
@@ -436,6 +442,112 @@ class LoadTestingSession(object):
                 num_in_cache = num304s = 0
                 for resource in resources:
                     # Check if this is in the cache
+                    if helpers.isset(self.__resource_cache, resource) and \
+                                self.__resource_cache[resource] > time.time():
+                        num_in_cache += 1
+                    else:
+                        # Set up headers
+                        headers = [
+                            'Cache-Control:max-age=0',
+							'Connection: keep-alive',
+							'Keep-Alive: 300'
+                        ]
+
+                    # Check if we have a last modified
+                    if helpers.isset(self.__resource_data, resource, 'Last-Modified'):
+                        headers.append('If-Modified-Since: %s' % \
+                                        self.__resource_data[resource]['Last-Modified'])
+                    # Check if we have an ETag
+                    if helpers.isset(self.__resource_data, resource, 'ETag'):
+                        headers.append('If-None-Match: %s' % \
+                                        self.__resource_data[resource]['ETag'])
+
+                    # Set headers
+                    ch.setopt(pycurl.HTTPHEADER, headers)
+
+                    # Make request
+                    ch.setopt(pycurl.URL, resource)
+                    start_time = time.time()
+                    try:
+                        content = ch.perform()
+                    except:
+                        end_time = time.time()
+                        record_page_time(end_time, 0, True, 0)
+                        record_url_page_load(self.remove_query_string_and_fragment_from_url(resource) \
+                                                                    end_time, 0, True, 0)
+                        traceback.print_exc() # throw last error
+
+                    # Check status code
+                    info = self.curl_getinfo(ch)
+                    if int(info['http_code']) == 304:
+                        num304s += 1
+
+                    # Record bandwidth
+                    kb = 0
+                    if info['download_content_length'] > 0:
+                        kb = int(info['download_content_length'])/1024
+                    elif info['size_download'] > 0:
+                        kb = int(infp['size_download'])/1024
+
+                    # Check response code
+                    reps_code = (not helpers.empty[info, 'http_code'])? \
+                                    int(info['http_code']) : None
+                    resp_error = False
+                    if not (resp_code >= 200 && resp_code <= 399):
+                        resp_error = True
+                        err = {
+                            'uri': self.remove_query_string_and_fragment_from_url(resource),
+                            'code': resp_code
+                        }
+                        record_error(json.dumps(err))
+
+                    # Record time
+                    end_time = time.time()
+                    record_url_page_load(self.remove_query_string_and_fragment_from_url(resource) \
+                                end_time, (not helpers.empty(info, 'total_time'))? float(info['total_time']) \
+                                : 0.0, resp_error, kb)
+
+                    # Add resource data
+                    if not helpers.isset(self.resource_data, resource):
+                        self.__resource_data[resource] = {
+                            'Last-Modified': None,
+                            'ETag': None # NOTE: is it OK?
+                        }
+
+                    # Read headers
+                    lines = re.split('(\r?\n)|\r', content)
+                    lines.pop(0)
+                    for line in lines:
+                        if not line:
+                            break
+
+                        # Parse header
+                        match = re.match('^([^:]+):(.*)$', line)
+                        if not match:
+                            raise Exception("%s: Bad header \"%s\"" % (resource, line))
+                        header = match.group(1).strip().lower()
+                        value = match.group(2).strip().lower()
+
+                        # Check for cache headers
+                        expires = None
+                        match = re.match('max-age=([0-9]+)', value)
+                        if header == 'cache-control' && match:
+                            expires = time.time()+match.group(1)
+                        elif header == 'expires':
+                            expires = datetime.datetime.strptime(value, \
+                                                "%a, %d %b %Y %H:%M:%S GMT")
+                        if expires:
+                            self.__resource_cache[resource] = expires
+
+                        # Other headers
+                        if header == 'last-modified':
+                            self.__resource_data[resource]['Last-Modified'] = value
+                        if header == 'etag':
+                            self.__resource_data[resource]['ETag'] = value
+
+                if self.__flags & self.VERBOSE:
+                    print("Page requires %i resources for base domain. %i found in cache. %i Not Modified responses." \
+                                                % (len(resources), num_in_cache, num304s))
 
 
     # TODO: docstringify
