@@ -90,6 +90,11 @@ class LoadTestingPageResponse(object):
         if not (self.get_http_status() == 200):
             return True
 
+        # Application specific code here
+        # Check for 'err' URL parameter
+        params = helpers.parse_qs_wrap(helpers.detect_url_query(self.__info['url']))
+        return helpers.isset(params, 'err')
+
 
     # TODO: docstringify
 	# /**

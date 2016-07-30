@@ -43,6 +43,19 @@ def detect_url_netloc(url):
 
 
 # TODO: docstringify
+# return a query part of a passed in link
+def detect_url_query(url):
+    return urlparse.urlparse(url).query
+
+
+# TODO: docstringify
+# return parsed query (wrapper
+# for cross-version support)
+def parse_qs_wrap(str):
+    return urlparse.parse_qs(str)
+
+
+# TODO: docstringify
 # detects whether the input url consists
 # only from scheme and netloc
 def is_relative_base(url):
@@ -69,3 +82,14 @@ def static_vars(**kwargs):
             setattr(func, k, kwargs[k])
         return func
     return decorate
+
+
+# TODO: docstringify
+# isset() function to check for a passed
+# key presence in a passed in dictionary
+def isset(lst, key):
+    try:
+        lst[key]
+        return True
+    except KeyError:
+        return False

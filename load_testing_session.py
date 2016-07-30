@@ -59,6 +59,15 @@ class LoadTestingSession(object):
     FILE_OUT_FORMAT = "%s%stest%i-%s%i-%s.txt" % (self.__output_dir, os.pathsep, \
                 self.__test_num, fetch_raw_data_from_url.page_num, "info")
 
+
+    # TODO: docstringify
+    # debug function for a curl object to capture
+    # and write out request headers information
+    def collect_headers(debug_type, debug_msg):
+        if debug_type == pycurl.INFOTYPE_HEADER_OUT:
+            self.__sent_headers = debug_msg
+
+
     # TODO: docstringify
 	# /**
 	#  * Constructor
@@ -137,6 +146,12 @@ class LoadTestingSession(object):
 
         # Don't check SSL
         self.__ch.setopt(pycurl.SSL_VERIFYPEER, 0)
+
+        # Verbose to be able to access headers out info
+        self.__ch.setopt(pycurl.VERBOSE, 1)
+
+        # Define debug function to capture request headers
+        self.__ch.setopt(pycurl.DEBUGFUNCTION, collect_headers)
 
 
     # Enable resource loading
@@ -245,10 +260,9 @@ class LoadTestingSession(object):
         # Save data
         if save_data:
             fetch_raw_data_from_url.page_num += 1
-            # NOTE: INFINISHED INFO OUT
             with open(FILE_OUT_FORMAT % (self.__output_dir, os.pathsep, \
                         self.__test_num, 'rawData', fetch_raw_data_from_url.page_num, "info"), "w") as f:
-                f.write(pprint.pprint(<>)+pprint.pprint(self.__last_resp_headers))
+                f.write(pprint.pprint(self.curl_getinfo(self.__ch))+pprint.pprint(self.__last_resp_headers))
             with open(FILE_OUT_FORMAT % (self.__output_dir, os.pathsep, \
                         self.__test_num, 'rawData', fetch_raw_data_from_url.page_num, "content"), "w") as f:
                 f.write(content)
@@ -327,7 +341,7 @@ class LoadTestingSession(object):
             record_url_page_load(self.remove_query_string_and_fragment_from_url(url), \
                                                     end_time, total_time, True, 0)
             traceback.print_exc() # throw last error
-        curl_info = # NOTE: CAN'T FIGURE OUT HOW TO GET IT
+        curl_info = self.curl_getinfo(self.__ch)
         rtn.set_content(content, curl_info['content_type'])
 
         # Get info
@@ -396,7 +410,32 @@ class LoadTestingSession(object):
             # Set up new curl object
             ch = pycurl.Curl()
             if resources and ch:
+
                 # Set options
+                ch.setopt(pycurl.HEADER, 1)
+                ch.setopt(pycurl.FOLLOWLOCATION, 1)
+
+                # Use persistent connection
+                ch.setopt(pycurl.FORBID_REUSE, 1)
+                ch.setopt(pycurl.FRESH_CONNECT, 0)
+
+                # Enable compression
+                ch.setopt(pycurl.ENCODING, '')
+
+                # Timeouts
+                ch.setopt(pycurl.CONNECTTIMEOUT, 30)
+                ch.setopt(pycurl.TIMEOUT, 120)
+
+                # Set cookie jar
+                ch.setopt(pycurl.COOKIEJAR, self.__cookie_jar)
+
+                # Don't check SSL
+                ch.setopt(pycurl.SSL_VERIFYPEER, 0)
+
+                # Get each resource
+                num_in_cache = num304s = 0
+                for resource in resources:
+                    # Check if this is in the cache
 
 
     # TODO: docstringify
@@ -456,3 +495,46 @@ class LoadTestingSession(object):
             return 2050
 
         return None
+
+
+    # TODO: docstringify
+    # function that matches PHP's curl_getinfo().
+    # Implemented using pycurl lib with a necessary
+    # in/out to provide the necessary functionality
+    def curl_getinfo(self, c, opt=None):
+        if opt:
+            try:
+                return c.getinfo(opt)
+            except AttributeError:
+                return False
+        else:
+            info_dict = {}
+            info_dict['url'] = c.getinfo(pycurl.EFFECTIVE_URL)
+            info_dict['content_type'] = c.getinfo(pycurl.CONTENT_TYPE)
+            info_dict['http_code'] = c.getinfo(pycurl.HTTP_CODE)
+            info_dict['header_size'] = c.getinfo(pycurl.HEADER_SIZE)
+            info_dict['request_size'] = c.getinfo(pycurl.REQUEST_SIZE)
+            info_dict['filetime'] = c.getinfo(pycurl.INFO_FILETIME)
+            info_dict['ssl_verify_result'] = c.getinfo(pycurl.SSL_VERIFYRESULT)
+            info_dict['redirect_count'] = c.getinfo(pycurl.REDIRECT_COUNT)
+            info_dict['total_time'] = c.getinfo(pycurl.TOTAL_TIME)
+            info_dict['namelookup_time'] = c.getinfo(pycurl.NAMELOOKUP_TIME)
+            info_dict['connect_time'] = c.getinfo(pycurl.CONNECT_TIME)
+            info_dict['pretransfer_time'] = c.getinfo(pycurl.PRETRANSFER_TIME)
+            info_dict['size_upload'] = c.getinfo(pycurl.SIZE_UPLOAD)
+            info_dict['size_download'] = c.getinfo(pycurl.SIZE_DOWNLOAD)
+            info_dict['speed_download'] = c.getinfo(pycurl.SPEED_DOWNLOAD)
+            info_dict['speed_upload'] = c.getinfo(pycurl.SPEED_UPLOAD)
+            info_dict['download_content_length'] = c.getinfo(pycurl.CONTENT_LENGTH_DOWNLOAD)
+            info_dict['upload_content_length'] = c.getinfo(pycurl.CONTENT_LENGTH_UPLOAD)
+            info_dict['starttransfer_time'] = c.getinfo(pycurl.STARTTRANSFER_TIME)
+            info_dict['redirect_time'] = c.getinfo(pycurl.REDIRECT_TIME)
+            info_dict['certinfo'] = c.getinfo(pycurl.INFO_CERTINFO)
+            info_dict['primary_ip'] = c.getinfo(pycurl.PRIMARY_IP)
+            info_dict['primary_port'] = c.getinfo(pycurl.PRIMARY_PORT)
+            info_dict['local_ip'] = c.getinfo(pycurl.LOCAL_IP)
+            info_dict['local_port'] = c.getinfo(pycurl.LOCAL_PORT)
+            info_dict['redirect_url'] = c.getinfo(pycurl.REDIRECT_URL)
+            info_dict['request_header'] = self.__sent_headers
+
+            return info_dict
