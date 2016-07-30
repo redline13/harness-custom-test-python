@@ -20,7 +20,7 @@ class LoadTestingTest:
     __verbose = False
 
     # Ini settings
-    __ini_settings = {} # NOTE: my guess it's a map
+    __ini_settings = {}
 
     # Test Number
     __test_num = None
