@@ -21,6 +21,9 @@ import time
 # to print out error
 import traceback
 
+# to user urlencode
+import urllib
+
 # Single Page Load Testing
 class LoadTestingSinglePage(LoadTestingTest):
 
@@ -34,8 +37,8 @@ class LoadTestingSinglePage(LoadTestingTest):
 
         # Parameters
         self.__parameters = {
-            'get': [], # NOTE: list or map?
-            'post': [] # NOTE: list or map?
+            'get': {},
+            'post': {}
         }
 
         # Call parent constructor
@@ -90,7 +93,7 @@ class LoadTestingSinglePage(LoadTestingTest):
             self.load_page()
 
             # Clean up session file
-            self.session.cleanup()
+            self.__session.cleanup()
         except:
             print("Test failed.")
 
@@ -120,4 +123,33 @@ class LoadTestingSinglePage(LoadTestingTest):
             url = self.__ini_settings['url']
             if not helpers.empty(self.__parameters, 'get'):
                 param_str = []
-                for ### pointer troubles
+                for tmp in self.__parameters['get']:
+                    # NOTE: using simple urlencode that doesn't support
+                    # multidimentional dictionaries. Testing is required
+                    # to make sure it works as expected
+                    param_str.append("%s=%s" % (urllib.urlencode(tmp['name']), \
+                                                urllib.urlencode(tmp['value'])))
+                    del tmp
+                    param_str = '&'.join(param_str)
+
+                    question_pos = url.find('?')
+                    hash_pos = url.find('#')
+                    if question_pos != -1:
+                        if hash_pos != -1:
+                            url = "%s&%s%s" % (url[0:hash_pos], param_str, url[:hash_pos])
+                        else:
+                            url = "%s&%s" %(url, param_str)
+                    else:
+                        if hash_pos != -1:
+                            url = "%s?%s%s" % (url[0:hash_pos], param_str, url[:hash_pos])
+                        else:
+                            url = "%s?%s" %(url, param_str)
+
+            # Should we store output as we test
+            store_output = not helpers.empty(self.__ini_settings['store_output'])
+
+            # Load page
+            self.__session.go_to_url(url, self.__parameters['post'], [], store_output)
+
+            # Record progress
+            record_progress(self.__test_num, (i+1)/iterations * 100)
