@@ -33,7 +33,7 @@ class LoadTestingSinglePage(LoadTestingTest):
 	#  * @param int $testNum Test number
 	#  * @param string $rand Random token for test
 	#  */
-    def __init__(test_num, rand):
+    def __init__(self, test_num, rand):
 
         # Parameters
         self.__parameters = {
@@ -50,7 +50,7 @@ class LoadTestingSinglePage(LoadTestingTest):
 	#  * Set ini settings
 	#  * @param array $iniSettings INI settings
 	#  */
-    def set_ini_settings(ini_settings):
+    def set_ini_settings(self, ini_settings):
         super(LoadTestingSinglePage, self).set_ini_settings(ini_settings)
 
         # Check if we should load external resources
@@ -79,7 +79,7 @@ class LoadTestingSinglePage(LoadTestingTest):
 	#  * Start the test
 	#  * @throws LoadTestingTestException
 	#  */
-    def start_test():
+    def start_test(self):
         try:
             # Sleep for ramp up time
             if helpers.isset(self.__ini_settings, 'ramp_up_time_sec') && \
@@ -107,7 +107,7 @@ class LoadTestingSinglePage(LoadTestingTest):
 	#  * @return LoadTestingPageResponse Page
 	#  * @throws LoadTestingTestException
 	#  */
-    def load_page():
+    def load_page(self):
         # Check for URL
         if helpers.empty(self.__ini_settings, 'url'):
             raise LoadTestingTestException('URL not specified.')

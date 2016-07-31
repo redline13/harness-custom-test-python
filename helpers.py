@@ -65,11 +65,19 @@ def is_relative_base(url):
 
 
 # TODO: docstringify
-# detets whether the input url has
+# detects whether the input url has
 # al least scheme and netloc (isAbsoluteBase)
 def is_absolute_base(url):
     parsed = urlparse.urlparse(url)
     return True if parsed.scheme and parsed.netloc else False
+
+
+# TODO: docstringify
+# returns absolute base of a passed in link
+# (scheme and netloc) + /
+def get_absolute_base(url):
+    parsed = urlparse.urlparse(url)
+    return "%s://%s/" % (parsed.scheme, parsed.netloc)
 
 
 # TODO: docstringify
