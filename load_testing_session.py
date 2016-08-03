@@ -511,7 +511,7 @@ class LoadTestingSession(object):
                     if not helpers.isset(self.resource_data, resource):
                         self.__resource_data[resource] = {
                             'Last-Modified': None,
-                            'ETag': None # NOTE: is it OK?
+                            'ETag': None
                         }
 
                     # Read headers

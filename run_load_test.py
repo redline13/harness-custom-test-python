@@ -1,30 +1,33 @@
 #NOTE: untested as for now
 
-# to register atexit function
-import atexit
-
 # to parse ini config
 from php.php import Php
 
-# to get the last stacktrace
+# to set fatal handler function
+import sys
+
+# to call a function on exit
+import atexit
+
+@atexit.register
+def exit_func():
+    print("Completed test")
+
 
 # TODO: docstringify
 # /**
 #  * used to capture to look for caught errors on exit.
 #  * @internal
 #  */
-@atexit.register
-def fatal_handler():
-    error_type = getattr(sys, 'last_type', None)
-    if error_type: # NOTE: not checking for an error type (python has no warnings)
-        print("record_fatal_error: %s" % sys.last_value) # TODO: REWRITE USING EXC_INFO()
+def fatal_handler(type, value, tb):
+    print("record_fatal_error: %s" % value)
 
 
-def inner_fatal_handler():
-    error_type = getattr(sys, 'last_type', None)
-    if error_type:
-        print('Python Fatal Error In ') # NOTE: INFINISHED
-        # TODO: REWRITE USING EXC_INFO()
+# inner on error function
+def fatal_handler(type, value, tb):
+    tb_list = traceback.extract_tb(tb)
+    print("Python fatal error in %s[%s]: %s" % (os.path.basename(tb_list[0][0]), \
+                                                tb_list[0][1], value))
 
 
 # TODO: docstringify
@@ -102,12 +105,54 @@ def record_progress(test_num, percent):
     print("record_progress(%i, %i)" % (test_num, percent)) # NOTE assuming percent is int
 
 
+# set function to execute on fatal error
+sys.excepthook = fatal_handler
+
 try:
     # Parse ini file
-    config = Php.parse_ini_file('loadtest.ini')
+    try:
+        config = Php.parse_ini_file('loadtest.ini')
+    except:
+        pass
 
     # Update running count
     print("Load_agent_running")
 
     # Register shutdown function
-    atexit.register(inner_fatal_handler)
+    sys.excepthook = inner_fatal_handler
+
+    # Get classname
+    if sys.argv[1]:
+        classname = sys.argv[1]
+    elif helpers.empty(config, 'classname'):
+        raise RuntimeError('Classname not specified.')
+    else:
+        classname = config['classname']
+
+    # Set up object
+    module_ = __import__(classname)
+    class_ = getattr(module_, classname)
+    test = class_(1, None)
+    try:
+        set_ini_settings = getattr(test, "set_ini_settings")
+        set_ini_settings(config)
+    except:
+        pass
+
+    # Check for delay
+    if helpers.isset(config, 'min_delay_ms') && helpers.isset("max_delay_ms"):
+        try:
+            set_delay = getattr(test, "set_delay")
+            set_delay(config['min_delay_ms'], config['max_delay_ms'])
+        except:
+            pass
+
+    # Start test
+        try:
+            start_test = getattr(test, "start_test")
+            start_test()
+        except:
+            raise RuntimeError('Invalid test script.')
+
+except Exception as e:
+    print("record_exception: %s" % str(e))
