@@ -1,5 +1,3 @@
-#NOTE: untested as for now
-
 # python helpers to implement PHP-like features
 import helpers
 
@@ -12,8 +10,9 @@ import re
 # to choose random elems
 import random
 
-# Load Testing Page Response
+
 class LoadTestingPageResponse(object):
+    """ Load Testing Page Response """
 
     def __init__(self):
 
@@ -26,67 +25,54 @@ class LoadTestingPageResponse(object):
         # BS html page object
         self.__doc = None
 
-
-    # TODO: docstringify
-    # /**
-	#  * Set the curl info for the page
-	#  * @param string Curl info
-	#  */
     def set_info(self, info):
+        """Set the curl info for the page
+
+        :param info: string Curl info
+        """
         self.__info = info
 
         # Output timing info
-        print( "%s: %fs" % (self.get_current_url(), self.get_total_time()) )
+        print("%s: %fs" % (self.get_current_url(), self.get_total_time()))
 
-
-    # TODO: docstringify
-    # /**
-	#  * Get the curl info for the page
-	#  * @return string Curl info
-	#  */
     def get_info(self):
+        """Get the curl info for the page
+
+        :returns: string Curl info
+        """
         return self.__info
 
+    def set_content(self, content, content_type=None):
+        """Set the page content
 
-    # TODO: docstringify
-    # NOTE: if content type is not HTML the __doc will remain None | Is it acceptable?
-    # /**
-	#  * Set the page content.
-	#  * @param string Page content
-	#  * @param string $contentType Optional content type.  If not detected as HTML,
-	#  * 	it wil not be loaded.
-	#  */
-    def set_content(self, content, content_type = None):
+        :param content: string Page content
+        :param content_type: string optional content type. If not detected as HTML,
+                it won't be loaded
+        """
         self.__content = content
-        accpt_cont_types = ['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml']
-        if not content_type or content_type in accpt_cont_types:
+        accept_cont_types = ['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml']
+        if not content_type or content_type in accept_cont_types:
             self.__doc = BeautifulSoup(self.__content, 'html.parser')
 
-
-    # TODO: docstringify
-	# /**
-	#  * Get the page content.
-	#  * @return string Page content
-	#  */
     def get_content(self):
-        return self.content
+        """Get the page content
 
+        :return: string Page content
+        """
+        return self.__content
 
-    # TODO: docstringify
-    # /**
-	#  * Get HTTP status code
-	#  * @return int HTTP status code
-	#  */
     def get_http_status(self):
+        """Get HTTP status code
+
+        :return: int HTTP status code
+        """
         return int(self.__info['http_code']) if not helpers.empty(self.__info, 'http_code') else None
 
-
-    # TODO: docstringify
-    # /**
-	#  * Check if there was an error
-	#  * @return bool True if this looks like there was an error
-	#  */
     def has_error(self):
+        """Check if there was an error
+
+        :return: bool True if this looks like there was an error
+        """
         if not (self.get_http_status() == 200):
             return True
 
@@ -95,74 +81,61 @@ class LoadTestingPageResponse(object):
         params = helpers.parse_qs_wrap(helpers.detect_url_query(self.__info['url']))
         return helpers.isset(params, 'err')
 
-
-    # TODO: docstringify
-	# /**
-	#  * Get error message returned to user
-	#  * @return string Error message returned to the user
-	#  */
     def get_user_error_message(self):
+        """Get error message returned to user
 
+        :return: string Error message returned to the user
+        """
         # Add application specific code here to get an application specific error message
 
         return None
 
-
-    # TODO: docstringify
-    # /**
-	#  * Check if the page appears as though a POST form submission succeeded
-	#  * @return bool True if this looks like a POST form successful submission
-	#  */
     def is_plausible_successful_post(self):
+        """Check if the page appears as though a POST form submission succeeded
 
+        :return: bool True if this looks like a POST form successful submission
+        """
         # Application specific code here
 
         try:
             is_redirect_count_positive = bool(int(self.__info['redirect_count']) > 0)
-        except ValueError, KeyError:
+        except (ValueError, KeyError):
             is_redirect_count_positive = False
 
         return not self.has_error() and is_redirect_count_positive
 
+    def get_current_url(self):
+        """Get current URL
 
-    # TODO: docstringify
-    # /**
-	#  * Get current URL
-	#  * @return string Current URL
-	#  */
-    def get_current_url():
-        return int(self.__info['url']) if not helpers.empty(self.__info, 'url') else None
+        :return: string Current URL
+        """
+        return self.__info['url'] if not helpers.empty(self.__info, 'url') else None
 
+    def get_total_time(self):
+        """Get total time to load page
 
-    # TODO: docstringify
-    # /**Overview
-	#  * Get total time to load page
-	#  * @return float Total time to load page
-	#  */
-    def getTotalTime(self):
+        :return: float Total time to load page
+        """
         return float(self.__info['total_time']) if not helpers.empty(self.__info, 'total_time') else None
 
-
-    # TODO: docstringify
-	# /**
-	#  * Parse the HTML content.
-	#  * @return DOMDocument
     def get_html_doc(self):
-        return self.__doc # NOTE: can return None (see line 52)
+        """Parse the HTML content
 
+        :return: BeautifulSoup object
+        """
+        return self.__doc
 
-    # TODO: docstringify
-    # /**
-	#  * Get base URL
-	#  * @return string Base URL
-	#  */
     def get_relative_base(self):
+        """Get base URL
+
+        :return: string Base URL
+        """
         base = ''
         base_elem = self.__doc.base
-        if(self.__doc.base):
+        if self.__doc.base:
             base = base_elem.get('href')
         else:
-            #Check for URLs in the form http://www.domain.com with no trailing slashes
+            # Check for URLs in the form http://www.domain.com with no trailing slashes
             if helpers.is_relative_base(self.__info['url']):
                 base = self.__info['url']
             else:
@@ -171,25 +144,21 @@ class LoadTestingPageResponse(object):
                     base = self.__info['url'][0:pos]
         return base
 
-
-    # TODO: docstringify
-	# /**
-	#  * Get page protocol (e.g. http or https)
-	#  * @return string Protocol
-	#  */
     def get_page_protocol(self):
+        """Get page protocol (e.g. http or https)
+
+        :return: string Protocol
+        """
         return helpers.detect_url_scheme(self.__info['url'])
 
-
-    # TODO: docstringify
-	#  /**
-	#  * Get base host
-	#  * @return string Base URL
-	#  */
     def get_absolute_base(self):
+        """Get base host
+
+        :return: string Base URL
+        """
         base = ''
         base_elem = self.__doc.base
-        if(self.__doc.base):
+        if self.__doc.base:
             base = base_elem.get('href')
         else:
             if helpers.is_absolute_base(self.__info['url']):
@@ -198,32 +167,25 @@ class LoadTestingPageResponse(object):
             base = base[0:-1]
         return base
 
-
-    # TODO: docstringify
-	# /**
-	#  * Get list of links on the page.
-	#  * @return array List of unique links
-	#  */
     def get_links(self):
-        abs_base = self.get_absolute_base()
-        rel_base = self.get_relative_base()
-        protocol = self.get_page_protocol()
+        """Get list of links on the page
 
+        :return: array List of unique links
+        """
         links = []
         link_elems = self.__doc.findAll('a')
         for link_elem in link_elems:
             link = self.format_link(link_elem, 'href')
-            if not link in links:
+            if link not in links:
                 links.append(link)
         return links
 
-
-    # TODO: docstringify
-    # /**
-	#  * Get form elements.
-	#  * @return array Array of form elements
-	#  */
     def get_form_elems(self):
+        """Get form elements
+
+        :return: array Array of form elements
+        """
+        # ----------- REDUNDANT PART ------------
         # Find the first non-login form
         forms = self.__doc.findAll('form')
         form = None
@@ -231,6 +193,8 @@ class LoadTestingPageResponse(object):
             if not re.match('login', tmp.get('action')):
                 form = tmp
                 break
+        # --------- REDUNDANT PART END ----------
+
         elems = []
         tmp1 = self.__doc.findAll('input')
         for tmp2 in tmp1:
@@ -246,13 +210,11 @@ class LoadTestingPageResponse(object):
             elems.append(tmp2)
         return elems
 
-
-    # TODO: docstringify
-	# /**
-	#  * Get form elements names.
-	#  * @return array Array of form element names.
-	#  */
     def get_form_elem_names(self):
+        """Get form elements names
+
+        :return: array Array of form element names
+        """
         names = []
         for elem in self.get_form_elems():
             name = elem.get('name')
@@ -260,13 +222,11 @@ class LoadTestingPageResponse(object):
                 names.append(name)
         return names
 
+    def get_submit_button_texts(self):
+        """Get submit button texts
 
-    # TODO: docstringify
-    # /**
-	#  * Get submit button texts
-	#  * @return array Array of submit button texts
-	#  */
-    def get_submit_button_texts():
+        :return: array Array of submit button texts
+        """
         rtn = []
         tmpl = self.__doc.findAll('input')
         for tmp2 in tmpl:
@@ -274,29 +234,21 @@ class LoadTestingPageResponse(object):
                 rtn.append(tmp2.get('value'))
         return rtn
 
-
-    # TODO: docstringify
-    # /**
-	#  * Randomly select an option from a select box
-	#  * @param DomElement $elem Select box
-	#  * @return string Value
-	#  */
     def select_dropdown_value(elem):
+        """Randomly select an option from a select box
+
+        :param elem: DOM element holding a select box (BeautifulSoup)
+        :return: string Value
+        """
         return elem.findChildren()[random.randrange(len(elem.findChildren()))].get('value')
 
-
-    # TODO: docstringify
-    # /**
-	#  * Get list of css hrefs on the page.
-	#  * @return array List of unique css hrefs
-	#  */
     def get_css_hrefs(self):
-        abs_base = self.get_absolute_base()
-        rel_base = self.get_relative_base()
-        protocol = self.get_page_protocol()
+        """Get list of css hrefs on the page
 
+        :return: array List of unique css hrefs
+        """
         hrefs = []
-        linkElems = self.__doc.findAll('link')
+        link_elems = self.__doc.findAll('link')
         for link_elem in link_elems:
             # Check if this is a stylesheet
             if link_elem.get('rel') == 'stylesheet':
@@ -305,16 +257,11 @@ class LoadTestingPageResponse(object):
                     hrefs.append(href)
         return hrefs
 
-
-    # TODO: docstringify
-    # /**
-	#  * Get list of image href on the page.
-	#  * @return array List of unique image hrefs
-	#  */
     def get_image_hrefs(self):
-        abs_base = self.get_absolute_base()
-        rel_base = self.get_relative_base()
-        protocol = self.get_page_protocol()
+        """Get list of image href on the page
+
+        :return: array List of unique image hrefs
+        """
 
         srcs = []
         img_elems = self.__doc.findAll('img')
@@ -324,17 +271,11 @@ class LoadTestingPageResponse(object):
                 srcs.append(src)
         return srcs
 
-
-    # TODO: docstringify
-    # /**
-	#  * Get list of javascript srcs on the page.
-	#  * @return array List of unique javascript srcs
-	#  */
     def get_javascript_srcs(self):
-        abs_base = self.get_absolute_base()
-        rel_base = self.get_relative_base()
-        protocol = self.get_page_protocol()
+        """Get list of javascript srcs on the page
 
+        :return: array List of unique javascript srcs
+        """
         srcs = []
         script_elems = self.__doc.findAll('script')
         for script_elem in script_elems:
@@ -343,13 +284,17 @@ class LoadTestingPageResponse(object):
                 srcs.append(src)
         return srcs
 
+    def format_link(self, link_elem, attr):
+        """Format link to get the absolute path to the resource
 
-    # TODO: docstringify
-    # additional function to
-    # incapsulate link formation
-    # that is present in several
-    # get__ functions
-    def format_link(self, link, attr):
+        :param link_elem: BS object that holds the link
+        :param attr: type of the link to get from the link_elem
+        :return: string Absolute link to the resource
+        """
+        abs_base = self.get_absolute_base()
+        rel_base = self.get_relative_base()
+        protocol = self.get_page_protocol()
+
         link = link_elem.get(attr).strip()
         if link and link.find('data:') != 0:
             if helpers.detect_url_scheme(link):
