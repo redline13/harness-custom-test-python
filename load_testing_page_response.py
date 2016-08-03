@@ -187,12 +187,12 @@ class LoadTestingPageResponse(object):
         """
         # ----------- REDUNDANT PART ------------
         # Find the first non-login form
-        forms = self.__doc.findAll('form')
-        form = None
-        for tmp in forms:
-            if not re.match('login', tmp.get('action')):
-                form = tmp
-                break
+        # forms = self.__doc.findAll('form')
+        # form = None
+        # for tmp in forms:
+        #   if not re.match('login', tmp.get('action')):
+        #       form = tmp
+        #       break
         # --------- REDUNDANT PART END ----------
 
         elems = []
@@ -234,7 +234,7 @@ class LoadTestingPageResponse(object):
                 rtn.append(tmp2.get('value'))
         return rtn
 
-    def select_dropdown_value(elem):
+    def select_dropdown_value(self, elem):
         """Randomly select an option from a select box
 
         :param elem: DOM element holding a select box (BeautifulSoup)
@@ -253,7 +253,7 @@ class LoadTestingPageResponse(object):
             # Check if this is a stylesheet
             if link_elem.get('rel') == 'stylesheet':
                 href = self.format_link(link_elem, 'href')
-                if not href in hrefs:
+                if href not in hrefs:
                     hrefs.append(href)
         return hrefs
 
@@ -267,7 +267,7 @@ class LoadTestingPageResponse(object):
         img_elems = self.__doc.findAll('img')
         for img_elem in img_elems:
             src = self.format_link(img_elem, 'src')
-            if not src in srcs:
+            if src not in srcs:
                 srcs.append(src)
         return srcs
 
@@ -280,7 +280,7 @@ class LoadTestingPageResponse(object):
         script_elems = self.__doc.findAll('script')
         for script_elem in script_elems:
             src = self.format_link(script_elem, 'src')
-            if not src in srcs:
+            if src not in srcs:
                 srcs.append(src)
         return srcs
 
