@@ -1,28 +1,23 @@
-#NOTE: untested as for now
-
-import load_testing_session
-
-# to match with PCRE
-import re
+from load_testing_session import LoadTestingSession
 
 # to use helper functions
 import helpers
 
-# Load Testing Test Exception
+
 class LoadTestingTestException(Exception):
+    """ Load Testing Test Exception """
     pass
 
-class LoadTestingTest(object):
 
-    # TODO: docstringify
-    # /**
-	#  * Constructor
-	#  * @param int $testNum Test Number
-	#  * @param string $rand Random token for test
-	#  * @param string $resourceUrl Optional URL specifying host that resources will
-	#  * 	be loaded for.  The hostname is grabbed from this URL.
-	#  */
-    def __init__(self, test_num, rand, resource_url = None):
+class LoadTestingTest(object):
+    def __init__(self, test_num, rand, resource_url=None):
+        """Constructor
+
+        :param test_num: int Test Number
+        :param rand: string Random token for test
+        :param resource_url: string Optional URL specifying host that resources will
+        be loaded for. The hostname is grabbed from this URL.
+        """
 
         # Verbose mode
         self.__verbose = False
@@ -30,86 +25,73 @@ class LoadTestingTest(object):
         # Ini settings
         self.__ini_settings = {}
 
-        # TODO: docstringify
-        # /** @var LoadTestingSession Access to object to invoke requests to pages and wrap CURL. */
+        # LoadTestingSession Access to object to invoke requests to pages and wrap CURL.
         self.__session = LoadTestingSession(test_num, rand)
 
         # Save test number
         self.__test_num = test_num
 
-        # Load resourse only from base url
-        if resource_url && helpers.is_absolute_base(resource_url):
+        # Load resource only from base url
+        if resource_url and helpers.is_absolute_base(resource_url):
             self.__session.loadable_resource_base_url = helpers.get_absolute_base(resource_url)
 
-
-    # Enable resource loading
     def enable_resource_loading(self):
+        """ Enable resource loading """
         self.__session.enable_resource_loading()
 
-
-    # Disable resource loading
-    def disable_resource_loading():
+    def disable_resource_loading(self):
+        """ Disable resource loading """
         self.__session.disable_resource_loading()
 
+    def set_delay(self, min_delay_ms, max_delay_ms):
+        """Set delay between page loads
 
-    # TODO: docstringify
-    # /**
-	#  * Set delay between page loads
-	#  * @param int $minDelayMs Minimum delay in ms
-	#  * @param int $maxDelayMs Maximum delay in ms
-	#  */
-    def set_delay(min_delay_ms, max_delay_ms):
+        :param min_delay_ms: int Minimum delay in ms
+        :param max_delay_ms: int Maximum delay in ms
+        """
         self.__session.set_delay(min_delay_ms, max_delay_ms)
 
+    def get_delay(self):
+        """Gets most recently used delay
 
-    # TODO: docstringify
-    # /**
-	#  * Gets most recently used delay.
-	#  * @return int
-	#  */
-    def get_delay():
+        :return: int Most recent delay used
+        """
         return self.__session.get_delay()
 
+    def set_ini_settings(self, ini_settings):
+        """Set ini settings
 
-    # TODO: docstringify
-    # /**
-	#  * Set ini settings
-	#  * @param array $iniSettings INI settings
-	#  */
-    def set_ini_settings(ini_settings):
+        :param ini_settings: dictionary INI settings
+        """
         self.__ini_settings = ini_settings
 
+    def get_ini_settings(self):
+        """Get the iniSettings (dictionary)
 
-    # TODO: docstringify
-    # /**
-	#  * Get the iniSettings (hashmap)
-	#  * @return HashMap Settings for test
-	#  */
-    def get_ini_settings():
+        :return: dictionary Settings for test
+        """
         return self.__ini_settings
 
+    def get_session(self):
+        """Get the session object, which wraps CURL for simple tests
 
-    # TODO: docstringify
-    # /**
-	#  * Get the sesssion object, which wraps CURL for simple tests.
-	#  * @return LoadTestingSession Session object.
-	#  */
-    def get_session():
+        :return: LoadTestingSession Session object
+        """
         return self.__session
 
-
-    # Verbose
-    def verbose():
+    def verbose(self):
+        """ Verbose """
         self.__verbose = True
         self.__session.verbose()
 
-
-    # Non-verbose
-    def non_verbose():
+    def non_verbose(self):
+        """ Non-verbose """
         self.__verbose = False
         self.__session.non_verbose()
 
-
-    # Start the test
-    def start_test():
+    def start_test(self):
+        """Start the test
+        This method throws the Exception! In order to start the test it has to be overrided with
+        the actual implementation (behaviour imitates abstract method in the more pythonic way)
+        """
         raise NotImplementedError()
