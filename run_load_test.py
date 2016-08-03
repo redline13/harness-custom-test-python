@@ -1,7 +1,7 @@
 #NOTE: untested as for now
 
 # to parse ini config
-from php.php import Php
+from php.php import Php # TODO: ini_parser doesn't work without sections therefore is not a good choice; rewrite using python's configparser.
 
 # to set fatal handler function
 import sys

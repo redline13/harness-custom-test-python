@@ -1,13 +1,14 @@
-import load_testing_test
+from load_testing_test import LoadTestingTest
 import time
 import random
 
+
 class ExampleTest(LoadTestingTest):
 
-    def start_test():
+    def start_test(self):
         start_user_time = time.time()
 
-        for x in range(1,101):
+        for x in range(1, 101):
             start_time = time.time()
             time.sleep(random.randint(2, 5))
             diff = time.time() - start_time
