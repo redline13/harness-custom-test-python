@@ -2,9 +2,6 @@
 
 import load_testing_session
 
-# to add the support for an abstract class definition
-from abs import ABCMeta, abstractmethod
-
 # to match with PCRE
 import re
 
@@ -15,8 +12,7 @@ import helpers
 class LoadTestingTestException(Exception):
     pass
 
-class LoadTestingTest:
-    __metaclass__ = ABCMeta
+class LoadTestingTest(object):
 
     # TODO: docstringify
     # /**
@@ -115,6 +111,5 @@ class LoadTestingTest:
 
 
     # Start the test
-    @abstractmethod
     def start_test():
-        return
+        raise NotImplementedError()
