@@ -185,16 +185,6 @@ class LoadTestingPageResponse(object):
 
         :return: array Array of form elements
         """
-        # ----------- REDUNDANT PART ------------
-        # Find the first non-login form
-        # forms = self.__doc.findAll('form')
-        # form = None
-        # for tmp in forms:
-        #   if not re.match('login', tmp.get('action')):
-        #       form = tmp
-        #       break
-        # --------- REDUNDANT PART END ----------
-
         elems = []
         tmp1 = self.__doc.findAll('input')
         for tmp2 in tmp1:
