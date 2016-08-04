@@ -25,9 +25,6 @@ import pycurl
 # to unlink (delete) variables
 import os
 
-# to create temp files
-import tempfile
-
 # to store the output of cURL execution
 try:
     from StringIO import StringIO

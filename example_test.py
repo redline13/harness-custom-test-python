@@ -15,7 +15,7 @@ class ExampleTest(LoadTestingTest):
             diff = time.time() - start_time
             record_helpers.record_url_page_load(x, start_time, diff)
 
-            end_user_elapsed = time.time() - start_user_time
-            record_helpers.record_page_time(start_user_time, end_user_elapsed)
+        end_user_elapsed = time.time() - start_user_time
+        record_helpers.record_page_time(start_user_time, end_user_elapsed)
 
         return True
