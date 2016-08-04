@@ -1,119 +1,125 @@
-#NOTE: untested as for now
+# helper functions
+import helpers
 
-# to parse ini config
-from php.php import Php # TODO: ini_parser doesn't work without sections therefore is not a good choice; rewrite using python's configparser.
+# to extract traceback
+import traceback
 
 # to set fatal handler function
 import sys
 
+# to get the basename of a file
+import os
+
 # to call a function on exit
 import atexit
+
 
 @atexit.register
 def exit_func():
     print("Completed test")
 
 
-# TODO: docstringify
-# /**
-#  * used to capture to look for caught errors on exit.
-#  * @internal
-#  */
 def fatal_handler(type, value, tb):
+    """Used to capture to look for caught errors on exit
+
+    :param type: string Type of the error
+    :param value: string Value of the error (message)
+    :param tb: Traceback object
+    """
     print("record_fatal_error: %s" % value)
 
 
-# inner on error function
-def fatal_handler(type, value, tb):
+def inner_fatal_handler(type, value, tb):
+    """ Inner on error function """
     tb_list = traceback.extract_tb(tb)
-    print("Python fatal error in %s[%s]: %s" % (os.path.basename(tb_list[0][0]), \
+    print("Python fatal error in %s[%s]: %s" % (os.path.basename(tb_list[0][0]),
                                                 tb_list[0][1], value))
 
 
-# TODO: docstringify
-# /**
-#  * Record the load time for a USER, this is typically across multiple iterations within a user.
-#  * @param int $ts timestamp of request end
-#  * @param int $time elapsed time request took
-#  * @param boolean $error was this request an error
-#  * @param int $kb size of request
-#  */
-def record_page_time(ts, time, error = False, kb = 0):
+def record_page_time(ts, time, error=False, kb=0):
+    """Record the load time for a USER, this is typically across multiple iterations within a user
+
+    :param ts: int Timestamp of request end
+    :param time: int elapsed time request took
+    :param error: boolean Was this request an error
+    :param kb: int Size of request
+    """
     print("record_page_time(%f, %f, %r, %i)" % (ts, time, error, kb))
 
 
-# TODO: docstringify
-# /**
-#  * Record a user thread starting.
-#  * @param int $userid
-#  * @param int $ts time user/thread was strarted
-#  */
 def record_user_start(userid, ts):
+    """Record a user thread starting
+
+    :param userid: int user id
+    :param ts: int time user/thread was started
+    """
     print("record_user_start(%i, %f)" % (userid, ts))
 
 
-# TODO: docstringify
-# /**
-#  * Record a user thread stopping
-#  * @param int $userid
-#  * @param int $ts
-#  * @param int $time elapsed time
-#  * @param boolean $err if this user stopped because of an error.
-#  */
-def record_user_stop(userid, ts, time, err = False):
+def record_user_stop(userid, ts, time, err=False):
+    """Record a user thread stopping
+
+    :param userid: int user id
+    :param ts: int ts
+    :param time: int elapsed time
+    :param err: if this user stopped because of an error
+    """
     print("record_user_stop(%s, %f, %f, %r)" % (userid, ts, time, err))
 
 
-# TODO: docstringify
-# /**
-#  * Record URL load
-#  * @param string $url Naming the request, can be URL or just NAME
-#  * @param int $ts timestamp of request end
-#  * @param int $time elapsed time request took
-#  * @param boolean $error was this request an error
-#  * @param int $kb size of request
-#  */
-def record_url_page_load(url, ts, time, error = False, kb = 0):
+def record_url_page_load(url, ts, time, error=False, kb=0):
+    """Record URL load
+
+    :param url: string Naming the request, can be URL or just name
+    :param ts: int Timestamp of request end
+    :param time: int Elapsed time request took
+    :param error: boolean Was this request an error
+    :param kb: int size of request
+    """
     print("record_url_page_load(%s, %f, %f, %r, %i)" % (url, ts, time, error, kb))
 
 
-# TODO: docstringify
-# /**
-#  * Record generic error message, not specific to a request or user.
-#  * @param String $error error string
-#  */
 def record_error(error):
+    """Record generic error message, not specific to a request or user
+
+    :param error: string Error string
+    """
     print("record_error: %s" % error)
 
 
-# TODO: docstringify
-# /**
-#  * Record download size, not specific to a request.
-#  * You can now use @see recordPageTime or @see recordURLPageLoad and include download size.
-#  */
 def record_download_size(kb):
+    """Record download size, not specific to a request
+    You can now use @see recordPageTime or @see recordURLPageLoad and include download size
+
+    :param kb: int Size of request
+    """
     print("record_download_size(%i)" % kb)
 
 
-# TODO: docstringify
-# /**
-#  * Record progress of the test (0-100)
-#  * @param int $testNum Test Number available $this->testNum
-#  * @param int $percent should reflect test completeness.
-#  */
 def record_progress(test_num, percent):
-    print("record_progress(%i, %i)" % (test_num, percent)) # NOTE assuming percent is int
+    """Record progress of the test (0-100)
+
+    :param test_num: int Test number available
+    :param percent: int Should reflect test completeness
+    :return:
+    """
+    print("record_progress(%i, %i)" % (test_num, percent))  # NOTE assuming percent is int
 
 
 # set function to execute on fatal error
 sys.excepthook = fatal_handler
 
 try:
-    # Parse ini file
-    try:
-        config = Php.parse_ini_file('loadtest.ini')
-    except:
-        pass
+    # ----------------- NOT WORKING PART -----------------
+    #    # Parse ini file
+    #    try:
+    #        config = Php.parse_ini_file('loadtest.ini')
+    #    except:
+    #        pass
+    # --------------- NOT WORKING PART END ----------------
+
+    # imitating imported config
+    config = {"classname": "ExampleTest"}
 
     # Update running count
     print("Load_agent_running")
@@ -140,14 +146,14 @@ try:
         pass
 
     # Check for delay
-    if helpers.isset(config, 'min_delay_ms') && helpers.isset("max_delay_ms"):
+    if helpers.isset(config, 'min_delay_ms') and helpers.isset(config, "max_delay_ms"):
         try:
             set_delay = getattr(test, "set_delay")
             set_delay(config['min_delay_ms'], config['max_delay_ms'])
         except:
             pass
 
-    # Start test
+            # Start test
         try:
             start_test = getattr(test, "start_test")
             start_test()
