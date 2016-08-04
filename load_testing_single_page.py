@@ -54,7 +54,7 @@ class LoadTestingSinglePage(LoadTestingTest):
         # Check if we should load external resources
         if not helpers.empty(self.__ini_settings, 'load_resources'):
             # TODO: Should we limit which external resources are loaded?
-            self.__session.loadable_resource_base_url = 'http'
+            self.session.loadable_resource_base_url = 'http'
             self.enable_resource_loading()
 
         # Set up parameters
@@ -86,7 +86,7 @@ class LoadTestingSinglePage(LoadTestingTest):
             self.load_page()
 
             # Clean up session file
-            self.__session.cleanup()
+            self.session.cleanup()
         except:
             print("Test failed.")
 
@@ -139,7 +139,7 @@ class LoadTestingSinglePage(LoadTestingTest):
             store_output = not helpers.empty(self.__ini_settings, 'store_output')
 
             # Load page
-            self.__session.go_to_url(url, self.__parameters['post'], [], store_output)
+            self.session.go_to_url(url, self.__parameters['post'], [], store_output)
 
             # Record progress
             record_helpers.record_progress(self.__test_num, (i + 1) / iterations * 100)

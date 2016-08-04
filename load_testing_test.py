@@ -26,22 +26,22 @@ class LoadTestingTest(object):
         self.__ini_settings = {}
 
         # LoadTestingSession Access to object to invoke requests to pages and wrap CURL.
-        self.__session = LoadTestingSession(test_num, rand)
+        self.session = LoadTestingSession(test_num, rand)
 
         # Save test number
         self.__test_num = test_num
 
         # Load resource only from base url
         if resource_url and helpers.is_absolute_base(resource_url):
-            self.__session.loadable_resource_base_url = helpers.get_absolute_base(resource_url)
+            self.session.loadable_resource_base_url = helpers.get_absolute_base(resource_url)
 
     def enable_resource_loading(self):
         """ Enable resource loading """
-        self.__session.enable_resource_loading()
+        self.session.enable_resource_loading()
 
     def disable_resource_loading(self):
         """ Disable resource loading """
-        self.__session.disable_resource_loading()
+        self.session.disable_resource_loading()
 
     def set_delay(self, min_delay_ms, max_delay_ms):
         """Set delay between page loads
@@ -49,14 +49,14 @@ class LoadTestingTest(object):
         :param min_delay_ms: int Minimum delay in ms
         :param max_delay_ms: int Maximum delay in ms
         """
-        self.__session.set_delay(min_delay_ms, max_delay_ms)
+        self.session.set_delay(min_delay_ms, max_delay_ms)
 
     def get_delay(self):
         """Gets most recently used delay
 
         :return: int Most recent delay used
         """
-        return self.__session.get_delay()
+        return self.session.get_delay()
 
     def set_ini_settings(self, ini_settings):
         """Set ini settings
@@ -77,17 +77,17 @@ class LoadTestingTest(object):
 
         :return: LoadTestingSession Session object
         """
-        return self.__session
+        return self.session
 
     def verbose(self):
         """ Verbose """
         self.__verbose = True
-        self.__session.verbose()
+        self.session.verbose()
 
     def non_verbose(self):
         """ Non-verbose """
         self.__verbose = False
-        self.__session.non_verbose()
+        self.session.non_verbose()
 
     def start_test(self):
         """Start the test
