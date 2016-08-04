@@ -1,5 +1,9 @@
 from load_testing_page_response import LoadTestingPageResponse
 
+# to ignore warning about tempnam func
+import warnings
+warnings.filterwarnings("ignore")
+
 # to use static_vars functionality
 import helpers
 
@@ -20,6 +24,9 @@ import pycurl
 
 # to unlink (delete) variables
 import os
+
+# to create temp files
+import tempfile
 
 # to store the output of cURL execution
 try:

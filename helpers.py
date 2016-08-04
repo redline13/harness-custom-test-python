@@ -134,3 +134,20 @@ def isset(lst, key, subkey=None):
         return True
     except KeyError:
         return False
+
+
+def un_camel(x):
+    """Convert camel-styled string to underscore-style string
+
+    :param x: string Camel-cased string
+    :return: string Underscore-styled string
+    """
+    final = ''
+    for item in x:
+        if item.isupper():
+            final += "_"+item.lower()
+        else:
+            final += item
+    if final[0] == "_":
+        final = final[1:]
+    return final
