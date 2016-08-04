@@ -13,6 +13,9 @@ import os
 # to call a function on exit
 import atexit
 
+# to remove temp folder
+import shutil
+
 # to parse INI config
 try:
     from configparser import ConfigParser
@@ -27,6 +30,8 @@ except ImportError:
 
 @atexit.register
 def exit_func():
+    """ Removing temp 'cookies' folder that is created in load_testing_session.py and exiting """
+    shutil.rmtree('cookies')
     print("Completed test")
 
 
@@ -53,6 +58,7 @@ sys.excepthook = fatal_handler
 
 try:
     # Parse ini file
+    config = None
     try:
         raw_config = "[s]\n"
         with open('loadtest.ini', 'r') as f:

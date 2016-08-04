@@ -4,6 +4,8 @@
 
 from load_testing_test import LoadTestingTest, LoadTestingTestException
 
+import record_helpers
+
 # helper functions
 import helpers
 
@@ -140,4 +142,4 @@ class LoadTestingSinglePage(LoadTestingTest):
             self.__session.go_to_url(url, self.__parameters['post'], [], store_output)
 
             # Record progress
-            record_progress(self.__test_num, (i + 1) / iterations * 100)
+            record_helpers.record_progress(self.__test_num, (i + 1) / iterations * 100)

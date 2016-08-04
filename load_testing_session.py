@@ -1,11 +1,13 @@
 from load_testing_page_response import LoadTestingPageResponse
 
-# to ignore warning about tempnam func
-import warnings
-warnings.filterwarnings("ignore")
-
 # to use static_vars functionality
 import helpers
+
+# record functions
+import record_helpers
+
+# to create temp files and folders
+import tempfile
 
 # Human readable print functions
 import pprint
@@ -141,7 +143,8 @@ class LoadTestingSession(object):
         self.__ch.setopt(pycurl.TIMEOUT, 120)
 
         # Set cookie jar (i.e. filename)
-        self.__cookie_jar = os.tempnam(self.__cookie_dir, 'cookie-')
+        os.mkdir(self.__cookie_dir)
+        self.__cookie_jar = tempfile.NamedTemporaryFile(dir=self.__cookie_dir, prefix='cookie-').name
         self.__ch.setopt(pycurl.COOKIEJAR, self.__cookie_jar)
 
         # Don't check SSL
@@ -322,8 +325,8 @@ class LoadTestingSession(object):
             end_time = time.time()
             total_time = end_time - start_time
             if is_user:
-                record_page_time(end_time, total_time, True, 0)  # NOTE: located in run_load_test.py
-            record_url_page_load(self.remove_query_string_and_fragment_from_url(url),
+                record_helpers.record_page_time(end_time, total_time, True, 0)  # NOTE: located in run_load_test.py
+            record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(url),
                                  end_time, total_time, True, 0)
             raise Exception(e)
         curl_info = self.curl_getinfo(self.__ch)
@@ -352,8 +355,8 @@ class LoadTestingSession(object):
         end_time = time.time()
         total_time = rtn.get_total_time()
         if is_user:
-            record_page_time(end_time, total_time, resp_error, 0)
-        record_url_page_load(self.remove_query_string_and_fragment_from_url(url),
+            record_helpers.record_page_time(end_time, total_time, resp_error, 0)
+        record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(url),
                              end_time, total_time, resp_error, kb)
 
         # Save files
@@ -449,8 +452,8 @@ class LoadTestingSession(object):
                     except pycurl.error as e:
                         end_time = time.time()
                         total_time = end_time - start_time
-                        record_page_time(end_time, total_time, True, 0)
-                        record_url_page_load(self.remove_query_string_and_fragment_from_url(resource),
+                        record_helpers.record_page_time(end_time, total_time, True, 0)
+                        record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(resource),
                                              end_time, total_time, True, 0)
                         raise Exception(e)
 
@@ -475,11 +478,11 @@ class LoadTestingSession(object):
                             'uri': self.remove_query_string_and_fragment_from_url(resource),
                             'code': resp_code
                         }
-                        record_error(json.dumps(err))
+                        record_helpers.record_error(json.dumps(err))
 
                     # Record time
                     end_time = time.time()
-                    record_url_page_load(self.remove_query_string_and_fragment_from_url(resource),
+                    record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(resource),
                                          end_time,
                                          float(info['total_time']) if not helpers.empty(info, 'total_time') else 0.0,
                                          resp_error, kb)
