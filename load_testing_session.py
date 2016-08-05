@@ -32,9 +32,9 @@ import os
 
 # to store the output of cURL execution
 try:
-    from StringIO import StringIO
+    from io import BytesIO
 except ImportError:
-    from io import StringIO
+    from StringIO import StringIO as BytesIO
 
 # to use PCRE in this module
 import re
@@ -66,7 +66,7 @@ class LoadTestingSession(object):
     # File output format
     FILE_OUT_FORMAT = "%s%stest%i-%s%i-%s.txt"
 
-    def collect_headers(self, debug_type, debug_msg):
+    def collect_out_headers(self, debug_type, debug_msg):
         """Debug function for a curl object to capture and save request headers information
 
         :param debug_type: pycurl constant that specifies type of the information passed
@@ -74,6 +74,34 @@ class LoadTestingSession(object):
         """
         if debug_type == pycurl.INFOTYPE_HEADER_OUT:
             self.__sent_headers = debug_msg
+
+    def header_function(self, header_line):
+        # HTTP standard specifies that headers are encoded in iso-8859-1.
+        # On Python 2, decoding step can be skipped.
+        # On Python 3, decoding step is required.
+        header_line = header_line.decode('iso-8859-1')
+
+        # Header lines include the first status line (HTTP/1.x ...).
+        # We are going to ignore all lines that don't have a colon in them.
+        # This will botch headers that are split on multiple lines...
+        if ':' not in header_line:
+            return
+
+        # Break the header line into header name and value.
+        name, value = header_line.split(':', 1)
+
+        # Remove whitespace that may be present.
+        # Header lines include the trailing newline, and there may be whitespace
+        # around the colon.
+        name = name.strip()
+        value = value.strip()
+
+        # Header names are case insensitive.
+        # Lowercase name here.
+        name = name.lower()
+
+        # Now we can actually record the header name and value.
+        self.__headers[name] = value
 
     def __init__(self, test_num, rand, cookie_dir='cookies', output_dir='output'):
         """Constructor
@@ -127,6 +155,9 @@ class LoadTestingSession(object):
         # Set up curl handle
         self.__ch = pycurl.Curl()
 
+        # Set header function
+        self.__ch.setopt(pycurl.HEADERFUNCTION, self.header_function)
+
         # Don't include HTTP headers in output
         self.__ch.setopt(pycurl.HEADER, 0)
 
@@ -158,10 +189,13 @@ class LoadTestingSession(object):
         self.__ch.setopt(pycurl.VERBOSE, 1)
 
         # Define debug function to capture request headers
-        self.__ch.setopt(pycurl.DEBUGFUNCTION, self.collect_headers)
+        self.__ch.setopt(pycurl.DEBUGFUNCTION, self.collect_out_headers)
 
         # variable to hold out headers of a request
         self.__sent_headers = None
+
+        # dictionary to hold headers to determine encoding
+        self.__headers = {}
 
     def enable_resource_loading(self):
         """ Enable resource loading """
@@ -249,12 +283,12 @@ class LoadTestingSession(object):
         self.__last_resp_headers = []  # Clear last response headers
 
         # Setting up a buffer to write out response
-        content = StringIO()
-        self.__ch.setopt(pycurl.WRITEFUNCTION, content.write)
+        buffer = BytesIO()
+        self.__ch.setopt(pycurl.WRITEFUNCTION, buffer.write)
         self.__ch.perform()  # throws Error upon failure
 
-        # get content form StringIO object
-        content = content.getvalue()
+        # Getting response and decoding it to content
+        content = buffer.getvalue().decode(self.detect_encoding())
 
         # Save data
         if save_data:
@@ -329,12 +363,12 @@ class LoadTestingSession(object):
         start_time = time.time()
         try:
             # Setting up a buffer to write out response
-            content = StringIO()
-            self.__ch.setopt(pycurl.WRITEFUNCTION, content.write)
+            buffer = BytesIO()
+            self.__ch.setopt(pycurl.WRITEFUNCTION, buffer.write)
             self.__ch.perform()
 
-            # get content form StringIO object
-            content = content.getvalue()
+            # Getting response and decoding it to content
+            content = buffer.getvalue().decode(self.detect_encoding())
 
             #print('---------')
             #print(content)
@@ -423,6 +457,9 @@ class LoadTestingSession(object):
             ch = pycurl.Curl()
             if resources and ch:
 
+                # Set header function
+                ch.setopt(pycurl.HEADERFUNCTION, self.header_function)
+
                 # Set options
                 ch.setopt(pycurl.HEADER, 1)
                 ch.setopt(pycurl.FOLLOWLOCATION, 1)
@@ -476,12 +513,13 @@ class LoadTestingSession(object):
                     start_time = time.time()
                     try:
                         # Setting up a buffer to write out response
-                        content = StringIO()
-                        ch.setopt(pycurl.WRITEFUNCTION, content.write)
+                        buffer = BytesIO()
+                        ch.setopt(pycurl.WRITEFUNCTION, buffer.write)
                         ch.perform()
 
-                        # get content form StringIO object
-                        content = content.getvalue()
+                        # Getting response and decoding it to content
+                        content = buffer.getvalue().decode(self.detect_encoding())
+                        
                     except pycurl.error as e:
                         end_time = time.time()
                         total_time = end_time - start_time
@@ -653,3 +691,16 @@ class LoadTestingSession(object):
             }
 
             return info_dict
+
+    def detect_encoding(self):
+        encoding = None
+        if 'content-type' in self.__headers:
+            content_type = self.__headers['content-type'].lower()
+            match = re.search('charset=(\S+)', content_type)
+            if match:
+                return match.group(1)
+        if encoding is None:
+            # Default encoding for HTML is iso-8859-1.
+            # Other content types may have different default encoding,
+            # or in case of binary data, may have no encoding at all.
+            return 'iso-8859-1'
