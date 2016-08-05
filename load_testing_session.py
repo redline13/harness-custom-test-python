@@ -519,7 +519,7 @@ class LoadTestingSession(object):
 
                         # Getting response and decoding it to content
                         content = buffer.getvalue().decode(self.detect_encoding())
-                        
+
                     except pycurl.error as e:
                         end_time = time.time()
                         total_time = end_time - start_time
@@ -574,7 +574,10 @@ class LoadTestingSession(object):
                             break
 
                         # Parse header
-                        match = re.match('^([^:]+):(.*)$', line)
+                        print('----')
+                        print(line)
+                        print('----')
+                        match = re.match('^([^:]+):(.*)$', line) # TODO: TEST REGEX - IT"S PROBABLY A PROBLEM
                         if not match:
                             raise Exception("%s: Bad header \"%s\"" % (resource, line))
                         header = match.group(1).strip().lower()

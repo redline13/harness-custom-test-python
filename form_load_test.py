@@ -1,9 +1,9 @@
 from load_testing_test import LoadTestingTest
 
 try:
-    import urllib
-except ImportError:
     import urllib.parse as urllib
+except ImportError:
+    import urllib
 
 
 class FormLoadTest(LoadTestingTest):
@@ -19,22 +19,22 @@ class FormLoadTest(LoadTestingTest):
 
     def start_test(self):
         """ Start the test """
-        #try:
-        # Load page
-        page = self.load_page()
+        try:
+            # Load page
+            page = self.load_page()
 
-        # Set delay that will be used with each call to go_to_url
-        self.set_delay(5000, 7000)
+            # Set delay that will be used with each call to go_to_url
+            self.set_delay(5000, 7000)
 
-        # Do search
-        page = self.do_query(page)
+            # Do search
+            page = self.do_query(page)
 
-        # Clean up session file
-        self.session.cleanup()
+            # Clean up session file
+            self.session.cleanup()
 
-        #except Exception as e:
-            #print("Test failed.")
-            #raise e
+        except Exception as e:
+            print("Test failed.")
+            raise e
 
     def load_page(self):
         """Load page

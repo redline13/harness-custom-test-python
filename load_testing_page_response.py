@@ -251,9 +251,9 @@ class LoadTestingPageResponse(object):
         link_elems = self.__doc.findAll('link')
         for link_elem in link_elems:
             # Check if this is a stylesheet
-            if link_elem.get('rel') == 'stylesheet':
+            if link_elem.get('rel')[0] == 'stylesheet':
                 href = self.format_link(link_elem, 'href')
-                if href not in hrefs:
+                if href and href not in hrefs:
                     hrefs.append(href)
         return hrefs
 
@@ -267,7 +267,7 @@ class LoadTestingPageResponse(object):
         img_elems = self.__doc.findAll('img')
         for img_elem in img_elems:
             src = self.format_link(img_elem, 'src')
-            if src not in srcs:
+            if src and src not in srcs:
                 srcs.append(src)
         return srcs
 
@@ -280,7 +280,7 @@ class LoadTestingPageResponse(object):
         script_elems = self.__doc.findAll('script')
         for script_elem in script_elems:
             src = self.format_link(script_elem, 'src')
-            if src not in srcs:
+            if src and src not in srcs:
                 srcs.append(src)
         return srcs
 
@@ -291,11 +291,15 @@ class LoadTestingPageResponse(object):
         :param attr: type of the link to get from the link_elem
         :return: string Absolute link to the resource
         """
+
         abs_base = self.get_absolute_base()
         rel_base = self.get_relative_base()
         protocol = self.get_page_protocol()
 
-        link = link_elem.get(attr).strip()
+        link = link_elem.get(attr)
+        if not link:
+            return None
+        link.strip()
         if link and link.find('data:') != 0:
             if helpers.detect_url_scheme(link):
                 return link
