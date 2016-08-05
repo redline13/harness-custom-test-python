@@ -567,18 +567,15 @@ class LoadTestingSession(object):
                         }
 
                     # Read headers
-                    lines = re.split('(\r?\n)|\r', content)
+                    lines = re.split("\r?\n|\r", content)
                     lines.pop(0)
                     for line in lines:
                         if not line:
                             break
 
                         # Parse header
-                        print('----')
-                        print(line)
-                        print('----')
-                        match = re.match('^([^:]+):(.*)$', line) # TODO: TEST REGEX - IT"S PROBABLY A PROBLEM
-                        if not match:
+                        match = re.match('^([^:]+):(.*)$', line)
+                        if match is None:
                             raise Exception("%s: Bad header \"%s\"" % (resource, line))
                         header = match.group(1).strip().lower()
                         value = match.group(2).strip().lower()
@@ -587,7 +584,7 @@ class LoadTestingSession(object):
                         expires = None
                         match = re.match('max-age=([0-9]+)', value)
                         if header == 'cache-control' and match:
-                            expires = time.time() + match.group(1)
+                            expires = str(time.time()) + match.group(1)
                         elif header == 'expires':
                             expires = datetime.datetime.strptime(value, "%a, %d %b %Y %H:%M:%S GMT")
                         if expires:
