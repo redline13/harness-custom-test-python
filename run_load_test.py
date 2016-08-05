@@ -31,7 +31,8 @@ except ImportError:
 @atexit.register
 def exit_func():
     """ Removing temp 'cookies' folder that is created in load_testing_session.py and exiting """
-    shutil.rmtree('cookies')
+    if os.path.exists('cookies'):
+        shutil.rmtree('cookies')
     print("Completed test")
 
 

@@ -15,15 +15,15 @@ class SimpleLoadTest(LoadTestingTest):
 
     def start_test(self):
         """ Start the test """
-        #try:
-        # Load page
-        page = self.load_page()
+        try:
+            # Load page
+            page = self.load_page()
 
-        # Clean up session file
-        self.session.cleanup()
-        #except Exception as e:
-            #print("Test failed.")
-            #raise e
+            # Clean up session file
+            self.session.cleanup()
+        except Exception as e:
+            print("Test failed.")
+            raise e
 
     def load_page(self):
         """Load page
@@ -34,6 +34,6 @@ class SimpleLoadTest(LoadTestingTest):
         time.sleep(random.uniform(0.000001, 10))
 
         # Load page
-        page = self.session.go_to_url('http://www.keddr.com')
+        page = self.session.go_to_url('http://www.google.com')
 
         return page

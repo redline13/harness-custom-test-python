@@ -6,7 +6,7 @@ def record_page_time(ts, time, error=False, kb=0):
     :param error: boolean Was this request an error
     :param kb: int Size of request
     """
-    print("record_page_time(%f, %f, %r, %i)" % (ts, time, error, kb))
+    print("record_page_time(%f, %f, %r, %f1)" % (ts, time, error, kb))
 
 
 def record_user_start(userid, ts):
@@ -38,7 +38,7 @@ def record_url_page_load(url, ts, time, error=False, kb=0):
     :param error: boolean Was this request an error
     :param kb: int size of request
     """
-    print("record_url_page_load(%s, %f, %f, %r, %i)" % (url, ts, time, error, kb))
+    print("record_url_page_load(%s, %f, %f, %r, %f)" % (url, ts, time, error, kb))
 
 
 def record_error(error):
@@ -55,7 +55,7 @@ def record_download_size(kb):
 
     :param kb: int Size of request
     """
-    print("record_download_size(%i)" % kb)
+    print("record_download_size(%f)" % kb)
 
 
 def record_progress(test_num, percent):

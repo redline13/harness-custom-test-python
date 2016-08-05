@@ -1,3 +1,6 @@
+# force float division
+from __future__ import division
+
 from load_testing_page_response import LoadTestingPageResponse
 
 # to use static_vars functionality
@@ -81,7 +84,8 @@ class LoadTestingSession(object):
         :param output_dir: string Output directory (default: 'output')
         """
         # Flags
-        self.__flags = None
+        self.__flags = 0
+        self.__flags = 0
 
         # Test Number
         self.__test_num = test_num
@@ -204,7 +208,8 @@ class LoadTestingSession(object):
 
         # Delete cookie file
         if self.__cookie_jar:
-            os.unlink(self.__cookie_jar)
+            if os.path.exists(self.__cookie_jar):
+                os.unlink(self.__cookie_jar)
 
     # TODO: http://pycurl.io/docs/latest/callbacks.html according the documentation
     # it should receive a byte string object (this could cause an error so should be
@@ -245,8 +250,11 @@ class LoadTestingSession(object):
 
         # Setting up a buffer to write out response
         content = StringIO()
-        self.__ch.setopt(pycurl.WRITEDATA, content)
+        self.__ch.setopt(pycurl.WRITEFUNCTION, content.write)
         self.__ch.perform()  # throws Error upon failure
+
+        # get content form StringIO object
+        content = content.getvalue()
 
         # Save data
         if save_data:
@@ -320,16 +328,29 @@ class LoadTestingSession(object):
         self.__last_resp_headers = []  # Clear last response headers
         start_time = time.time()
         try:
-            content = self.__ch.perform()
+            # Setting up a buffer to write out response
+            content = StringIO()
+            self.__ch.setopt(pycurl.WRITEFUNCTION, content.write)
+            self.__ch.perform()
+
+            # get content form StringIO object
+            content = content.getvalue()
+
+            #print('---------')
+            #print(content)
+            #print('---------')
         except pycurl.error as e:
             end_time = time.time()
             total_time = end_time - start_time
             if is_user:
                 record_helpers.record_page_time(end_time, total_time, True, 0)  # NOTE: located in run_load_test.py
             record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(url),
-                                 end_time, total_time, True, 0)
+                                                end_time, total_time, True, 0)
             raise Exception(e)
         curl_info = self.curl_getinfo(self.__ch)
+        #print('---------')
+        #print(curl_info)
+        #print('---------')
         rtn.set_content(content, curl_info['content_type'])
 
         # Get info
@@ -339,7 +360,7 @@ class LoadTestingSession(object):
 
         # Record bandwidth
         info = rtn.get_info()
-        kb = 0
+
         if info['download_content_length'] > 0:
             kb = int(info['download_content_length']) / 1024
         elif info['size_download'] > 0:
@@ -357,7 +378,7 @@ class LoadTestingSession(object):
         if is_user:
             record_helpers.record_page_time(end_time, total_time, resp_error, 0)
         record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(url),
-                             end_time, total_time, resp_error, kb)
+                                            end_time, total_time, resp_error, kb)
 
         # Save files
         if save_data:
@@ -368,6 +389,12 @@ class LoadTestingSession(object):
             with open(self.FILE_OUT_FORMAT % (self.__output_dir, os.pathsep,
                                               self.__test_num, 'page', self.go_to_url.page_num, "content"), "w") as f:
                 f.write(rtn.get_content())
+
+        # Load resources
+        if not resp_error and self.__flags & self.LOAD_RESOURCES:
+            self.load_resources(rtn)
+
+        return rtn
 
     def load_resources(self, page):
         """Parse page and request other resources
@@ -448,13 +475,19 @@ class LoadTestingSession(object):
                     ch.setopt(pycurl.URL, resource)
                     start_time = time.time()
                     try:
-                        content = ch.perform()
+                        # Setting up a buffer to write out response
+                        content = StringIO()
+                        ch.setopt(pycurl.WRITEFUNCTION, content.write)
+                        ch.perform()
+
+                        # get content form StringIO object
+                        content = content.getvalue()
                     except pycurl.error as e:
                         end_time = time.time()
                         total_time = end_time - start_time
                         record_helpers.record_page_time(end_time, total_time, True, 0)
                         record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(resource),
-                                             end_time, total_time, True, 0)
+                                                            end_time, total_time, True, 0)
                         raise Exception(e)
 
                     # Check status code
@@ -483,9 +516,10 @@ class LoadTestingSession(object):
                     # Record time
                     end_time = time.time()
                     record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(resource),
-                                         end_time,
-                                         float(info['total_time']) if not helpers.empty(info, 'total_time') else 0.0,
-                                         resp_error, kb)
+                                                        end_time,
+                                                        float(info['total_time']) if not helpers.empty(info,
+                                                                                                       'total_time') else 0.0,
+                                                        resp_error, kb)
 
                     # Add resource data
                     if not helpers.isset(self.__resource_data, resource):
