@@ -79,34 +79,6 @@ class LoadTestingSession(object):
         if debug_type == pycurl.INFOTYPE_HEADER_OUT:
             self.__sent_headers = debug_msg
 
-    def header_function(self, header_line):
-        # HTTP standard specifies that headers are encoded in iso-8859-1.
-        # On Python 2, decoding step can be skipped.
-        # On Python 3, decoding step is required.
-        header_line = header_line.decode('iso-8859-1')
-
-        # Header lines include the first status line (HTTP/1.x ...).
-        # We are going to ignore all lines that don't have a colon in them.
-        # This will botch headers that are split on multiple lines...
-        if ':' not in header_line:
-            return
-
-        # Break the header line into header name and value.
-        name, value = header_line.split(':', 1)
-
-        # Remove whitespace that may be present.
-        # Header lines include the trailing newline, and there may be whitespace
-        # around the colon.
-        name = name.strip()
-        value = value.strip()
-
-        # Header names are case insensitive.
-        # Lowercase name here.
-        name = name.lower()
-
-        # Now we can actually record the header name and value.
-        self.__headers[name] = value
-
     def __init__(self, test_num, rand, cookie_dir='cookies', output_dir='output'):
         """Constructor
 
@@ -159,9 +131,6 @@ class LoadTestingSession(object):
         # Set up curl handle
         self.__ch = pycurl.Curl()
 
-        # Set header function
-        self.__ch.setopt(pycurl.HEADERFUNCTION, self.header_function)
-
         # Don't include HTTP headers in output
         self.__ch.setopt(pycurl.HEADER, 0)
 
@@ -207,14 +176,14 @@ class LoadTestingSession(object):
 
     def disable_resource_loading(self):
         """ Disable resource loading """
-        self.__flags |= ~self.LOAD_RESOURCES
+        self.__flags &= ~self.LOAD_RESOURCES
 
     def verbose(self):
         """ Verbose """
-        self.__flags = self.VERBOSE
+        self.__flags |= self.VERBOSE
 
         # Output cookie jar file
-        print('Cookie jar: %s') % self.__cookie_jar
+        print('Cookie jar: %s' % self.__cookie_jar)
 
     def non_verbose(self):
         """ Non-verbose """
@@ -249,11 +218,36 @@ class LoadTestingSession(object):
             if os.path.exists(self.__cookie_jar):
                 os.unlink(self.__cookie_jar)
 
-    # TODO: http://pycurl.io/docs/latest/callbacks.html according the documentation
-    # it should receive a byte string object (this could cause an error so should be
-    # double checked
     def get_last_curl_resp_headers(self, header):
         """ Set last curl response headers """
+
+        # HTTP standard specifies that headers are encoded in iso-8859-1.
+        # On Python 2, decoding step can be skipped.
+        # On Python 3, decoding step is required.
+        header = header.decode('iso-8859-1')
+
+        # Header lines include the first status line (HTTP/1.x ...).
+        # We are going to ignore all lines that don't have a colon in them.
+        # This will botch headers that are split on multiple lines...
+        if ':' not in header:
+            return
+
+        # Break the header line into header name and value.
+        name, value = header.split(':', 1)
+
+        # Remove whitespace that may be present.
+        # Header lines include the trailing newline, and there may be whitespace
+        # around the colon.
+        name = name.strip()
+        value = value.strip()
+
+        # Header names are case insensitive.
+        # Lowercase name here.
+        name = name.lower()
+
+        # Now we can actually record the header name and value.
+        self.__headers[name] = value
+
         self.__last_resp_headers.append(header.strip())
         return len(header)
 
@@ -302,8 +296,8 @@ class LoadTestingSession(object):
                     (self.__test_num, 'rawData', self.__page_num_fetch, "info")), "w") as f:
                 f.write(pprint.pformat(self.curl_getinfo(self.__ch)) + pprint.pformat(self.__last_resp_headers))
             with open(os.path.join(self.__output_dir, self.FILE_OUT_FORMAT %
-                    (self.__test_num, 'rawData', self.__page_num_fetch, "content")), "w") as f:
-                f.write(content.encode('latin-1'))
+                    (self.__test_num, 'rawData', self.__page_num_fetch, "content")), "wb") as f:
+                f.write(content.encode('utf-8'))
 
         return content
 
@@ -375,7 +369,7 @@ class LoadTestingSession(object):
             end_time = time.time()
             total_time = end_time - start_time
             if is_user:
-                record_helpers.record_page_time(end_time, total_time, True, 0)  # NOTE: located in run_load_test.py
+                record_helpers.record_page_time(end_time, total_time, True, 0)
             record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(url),
                                                 end_time, total_time, True, 0)
             raise Exception(e)
@@ -416,10 +410,10 @@ class LoadTestingSession(object):
             self.__page_num_go_to_url += 1
             with open(os.path.join(self.__output_dir, self.FILE_OUT_FORMAT %
                     (self.__test_num, 'page', self.__page_num_go_to_url, 'info')), "w",) as f:
-                f.write(pprint.pformat(rtn.get_info()) + pprint.pformat(self.__last_resp_headers))
+                f.write(pprint.pformat(rtn.get_info()) + "\n" + pprint.pformat(self.__last_resp_headers))
             with open(os.path.join(self.__output_dir, self.FILE_OUT_FORMAT %
                     (self.__test_num, 'page', self.__page_num_go_to_url, "content")), "wb") as f:
-                f.write(rtn.get_content().encode('latin-1'))
+                f.write(rtn.get_content().encode('utf-8'))
 
         # Load resources
         if not resp_error and self.__flags & self.LOAD_RESOURCES:
@@ -453,8 +447,8 @@ class LoadTestingSession(object):
             ch = pycurl.Curl()
             if resources and ch:
 
-                # Set header function
-                ch.setopt(pycurl.HEADERFUNCTION, self.header_function)
+                # Set up function to get headers
+                ch.setopt(pycurl.HEADERFUNCTION, self.get_last_curl_resp_headers)
 
                 # Set options
                 ch.setopt(pycurl.HEADER, 1)
@@ -482,7 +476,7 @@ class LoadTestingSession(object):
                 for resource in resources:
                     # Check if this is in the cache
                     if helpers.isset(self.__resource_cache, resource) and \
-                                    self.__resource_cache[resource] > time.time():
+                                    float(self.__resource_cache[resource]) > time.time():
                         num_in_cache += 1
                     else:
                         # Set up headers
@@ -492,105 +486,104 @@ class LoadTestingSession(object):
                             'Keep-Alive: 300'
                         ]
 
-                    # Check if we have a last modified
-                    if helpers.isset(self.__resource_data, resource, 'Last-Modified'):
-                        headers.append('If-Modified-Since: %s' %
-                                       self.__resource_data[resource]['Last-Modified'])
-                    # Check if we have an ETag
-                    if helpers.isset(self.__resource_data, resource, 'ETag'):
-                        headers.append('If-None-Match: %s' %
-                                       self.__resource_data[resource]['ETag'])
+                        # Check if we have a last modified
+                        if helpers.isset(self.__resource_data, resource, 'Last-Modified'):
+                            headers.append('If-Modified-Since: %s' %
+                                           self.__resource_data[resource]['Last-Modified'])
+                        # Check if we have an ETag
+                        if helpers.isset(self.__resource_data, resource, 'ETag'):
+                            headers.append('If-None-Match: %s' %
+                                           self.__resource_data[resource]['ETag'])
 
-                    # Set headers
-                    ch.setopt(pycurl.HTTPHEADER, headers)
+                        # Set headers
+                        ch.setopt(pycurl.HTTPHEADER, headers)
 
-                    # Make request
-                    ch.setopt(pycurl.URL, resource)
-                    start_time = time.time()
-                    try:
-                        # Setting up a buffer to write out response
-                        buffer = BytesIO()
-                        ch.setopt(pycurl.WRITEFUNCTION, buffer.write)
-                        ch.perform()
+                        # Make request
+                        ch.setopt(pycurl.URL, resource)
+                        start_time = time.time()
+                        try:
+                            # Setting up a buffer to write out response
+                            buffer = BytesIO()
+                            ch.setopt(pycurl.WRITEFUNCTION, buffer.write)
+                            ch.perform()
 
-                        # Getting response and decoding it to content
-                        content = buffer.getvalue().decode(self.detect_encoding())
+                            # Getting response and decoding it to content
+                            content = buffer.getvalue().decode(self.detect_encoding())
 
-                    except pycurl.error as e:
+                        except pycurl.error as e:
+                            end_time = time.time()
+                            total_time = end_time - start_time
+                            record_helpers.record_page_time(end_time, total_time, True, 0)
+                            record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(resource),
+                                                                end_time, total_time, True, 0)
+                            raise Exception(e)
+
+                        # Check status code
+                        info = self.curl_getinfo(ch)
+                        if int(info['http_code']) == 304:
+                            num304s += 1
+
+                        # Record bandwidth
+                        kb = 0
+                        if info['download_content_length'] > 0:
+                            kb = int(info['download_content_length']) / 1024
+                        elif info['size_download'] > 0:
+                            kb = int(info['size_download']) / 1024
+
+                        # Check response code
+                        resp_code = int(info['http_code']) if not helpers.empty(info, 'http_code') else None
+                        resp_error = False
+                        if not (200 <= resp_code <= 399):
+                            resp_error = True
+                            err = {
+                                'uri': self.remove_query_string_and_fragment_from_url(resource),
+                                'code': resp_code
+                            }
+                            record_helpers.record_error(json.dumps(err))
+
+                        # Record time
                         end_time = time.time()
-                        total_time = end_time - start_time
-                        record_helpers.record_page_time(end_time, total_time, True, 0)
                         record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(resource),
-                                                            end_time, total_time, True, 0)
-                        raise Exception(e)
+                                                            end_time, float(info['total_time']) if not helpers.empty(info,
+                                                            'total_time') else 0.0, resp_error, kb)
 
-                    # Check status code
-                    info = self.curl_getinfo(ch)
-                    if int(info['http_code']) == 304:
-                        num304s += 1
+                        # Add resource data
+                        if not helpers.isset(self.__resource_data, resource):
+                            self.__resource_data[resource] = {
+                                'Last-Modified': None,
+                                'ETag': None
+                            }
 
-                    # Record bandwidth
-                    kb = 0
-                    if info['download_content_length'] > 0:
-                        kb = int(info['download_content_length']) / 1024
-                    elif info['size_download'] > 0:
-                        kb = int(info['size_download']) / 1024
+                        # Read headers
+                        lines = re.split("\r?\n|\r", content)
+                        lines.pop(0)
+                        for line in lines:
+                            if not line:
+                                break
 
-                    # Check response code
-                    resp_code = int(info['http_code']) if not helpers.empty(info, 'http_code') else None
-                    resp_error = False
-                    if not (200 <= resp_code <= 399):
-                        resp_error = True
-                        err = {
-                            'uri': self.remove_query_string_and_fragment_from_url(resource),
-                            'code': resp_code
-                        }
-                        record_helpers.record_error(json.dumps(err))
+                            # Parse header
+                            match = re.match('^([^:]+):(.*)$', line)
+                            if match is None:
+                                raise Exception("%s: Bad header \"%s\"" % (resource, line))
+                            header = match.group(1).strip().lower()
+                            value = match.group(2).strip().lower()
 
-                    # Record time
-                    end_time = time.time()
-                    record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(resource),
-                                                        end_time,
-                                                        float(info['total_time']) if not helpers.empty(info,
-                                                                                                       'total_time') else 0.0,
-                                                        resp_error, kb)
+                            # Check for cache headers
+                            expires = None
+                            match = re.match('max-age=([0-9]+)', value)
+                            if header == 'cache-control' and match:
+                                expires = time.time() + float(match.group(1))
+                            elif header == 'expires':
+                                expires = self.datetime_to_unix_time(datetime.datetime.\
+                                                                     strptime(value, "%a, %d %b %Y %H:%M:%S GMT"))
+                            if expires:
+                                self.__resource_cache[resource] = expires
 
-                    # Add resource data
-                    if not helpers.isset(self.__resource_data, resource):
-                        self.__resource_data[resource] = {
-                            'Last-Modified': None,
-                            'ETag': None
-                        }
-
-                    # Read headers
-                    lines = re.split("\r?\n|\r", content)
-                    lines.pop(0)
-                    for line in lines:
-                        if not line:
-                            break
-
-                        # Parse header
-                        match = re.match('^([^:]+):(.*)$', line)
-                        if match is None:
-                            raise Exception("%s: Bad header \"%s\"" % (resource, line))
-                        header = match.group(1).strip().lower()
-                        value = match.group(2).strip().lower()
-
-                        # Check for cache headers
-                        expires = None
-                        match = re.match('max-age=([0-9]+)', value)
-                        if header == 'cache-control' and match:
-                            expires = str(time.time()) + match.group(1)
-                        elif header == 'expires':
-                            expires = datetime.datetime.strptime(value, "%a, %d %b %Y %H:%M:%S GMT")
-                        if expires:
-                            self.__resource_cache[resource] = expires
-
-                        # Other headers
-                        if header == 'last-modified':
-                            self.__resource_data[resource]['Last-Modified'] = value
-                        if header == 'etag':
-                            self.__resource_data[resource]['ETag'] = value
+                            # Other headers
+                            if header == 'last-modified':
+                                self.__resource_data[resource]['Last-Modified'] = value
+                            if header == 'etag':
+                                self.__resource_data[resource]['ETag'] = value
 
                 if self.__flags & self.VERBOSE:
                     print("Page requires %i resources for base domain. %i found in cache. %i Not Modified responses."
@@ -700,3 +693,8 @@ class LoadTestingSession(object):
             # Other content types may have different default encoding,
             # or in case of binary data, may have no encoding at all.
             return 'iso-8859-1'
+
+    @staticmethod
+    def datetime_to_unix_time(dt):
+        epoch = datetime.datetime.utcfromtimestamp(0)
+        return (dt - epoch).total_seconds() * 1000.0
