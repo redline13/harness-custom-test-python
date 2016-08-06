@@ -29,7 +29,7 @@ class LoadTestingTest(object):
         self.session = LoadTestingSession(test_num, rand)
 
         # Save test number
-        self.__test_num = test_num
+        self.test_num = test_num
 
         # Load resource only from base url
         if resource_url and helpers.is_absolute_base(resource_url):

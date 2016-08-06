@@ -36,6 +36,12 @@ try:
 except ImportError:
     from StringIO import StringIO as BytesIO
 
+# to encode post
+try:
+    import urllib.parse as urllib
+except ImportError:
+    import urllib
+
 # to use PCRE in this module
 import re
 
@@ -344,7 +350,7 @@ class LoadTestingSession(object):
         # Set post info
         if post:
             self.__ch.setopt(pycurl.POST, 1)
-            self.__ch.setopt(pycurl.POSTFIELDS, post)
+            self.__ch.setopt(pycurl.POSTFIELDS, urllib.urlencode(post))
         else:
             self.__ch.setopt(pycurl.POST, 0)
 

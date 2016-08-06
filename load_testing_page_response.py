@@ -49,20 +49,11 @@ class LoadTestingPageResponse(object):
         :param content_type: string optional content type. If not detected as HTML,
                 it won't be loaded
         """
-        #print('------------------')
-        #print('SETTING CONTENT ...')
-        #print(content)
-        #print('------------------')
         self.__content = content
 
         if not content_type or re.match(r"^(text/html|application/xhtml\+xml|text/xml|application/xml)",
                                         content_type, re.IGNORECASE):
             self.__doc = BeautifulSoup(self.__content, 'html.parser')
-
-        #print('------')
-        #print('THE __DOC IS: ')
-        #print(self.__doc)
-        #print('------')
 
     def get_content(self):
         """Get the page content
@@ -186,7 +177,7 @@ class LoadTestingPageResponse(object):
         link_elems = self.__doc.findAll('a')
         for link_elem in link_elems:
             link = self.format_link(link_elem, 'href')
-            if link not in links:
+            if link and link not in links:
                 links.append(link)
         return links
 
