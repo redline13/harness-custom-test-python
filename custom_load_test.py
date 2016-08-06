@@ -9,5 +9,5 @@ class CustomLoadTest(LoadTestingTest):
     def start_test(self):
         url = 'http://keddr.com'
         self.session.enable_resource_loading()
-        self.session.loadable_resource_base_url = url
-        page = self.session.go_to_url(url)
+        self.session.loadable_resource_base_url = 'http://keddr.com'
+        page = self.session.go_to_url(url=url, save_data=True)

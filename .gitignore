@@ -2,3 +2,4 @@ workplan.txt
 .idea/
 *.pyc
 __pycache__/
+output/

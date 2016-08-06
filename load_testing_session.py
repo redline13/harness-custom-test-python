@@ -64,7 +64,11 @@ class LoadTestingSession(object):
     VERBOSE = 0x00000002
 
     # File output format
-    FILE_OUT_FORMAT = "%s%stest%i-%s%i-%s.txt"
+    FILE_OUT_FORMAT = "test%i-%s%i-%s.txt"
+
+    # Static page num
+    __page_num_go_to_url = 0
+    __page_num_fetch = 0
 
     def collect_out_headers(self, debug_type, debug_msg):
         """Debug function for a curl object to capture and save request headers information
@@ -253,7 +257,6 @@ class LoadTestingSession(object):
         self.__last_resp_headers.append(header.strip())
         return len(header)
 
-    @helpers.static_vars(page_num=0)
     def fetch_raw_data_from_url(self, url, post=None, headers=[], save_data=False):
         """Fetch raw data form a URL with no delays or output
 
@@ -292,15 +295,15 @@ class LoadTestingSession(object):
 
         # Save data
         if save_data:
-            self.fetch_raw_data_from_url.page_num += 1
-            with open(self.FILE_OUT_FORMAT % (self.__output_dir, os.pathsep,
-                                              self.__test_num, 'rawData', self.fetch_raw_data_from_url.page_num,
-                                              "info"), "w") as f:
-                f.write(pprint.pprint(self.curl_getinfo(self.__ch)) + pprint.pprint(self.__last_resp_headers))
-            with open(self.FILE_OUT_FORMAT % (self.__output_dir, os.pathsep,
-                                              self.__test_num, 'rawData', self.fetch_raw_data_from_url.page_num,
-                                              "content"), "w") as f:
-                f.write(content)
+            if not os.path.exists(self.__output_dir):
+                os.makedirs(self.__output_dir)
+            self.__page_num_fetch += 1
+            with open(os.path.join(self.__output_dir, self.FILE_OUT_FORMAT %
+                    (self.__test_num, 'rawData', self.__page_num_fetch, "info")), "w") as f:
+                f.write(pprint.pformat(self.curl_getinfo(self.__ch)) + pprint.pformat(self.__last_resp_headers))
+            with open(os.path.join(self.__output_dir, self.FILE_OUT_FORMAT %
+                    (self.__test_num, 'rawData', self.__page_num_fetch, "content")), "w") as f:
+                f.write(content.encode('latin-1'))
 
         return content
 
@@ -319,7 +322,6 @@ class LoadTestingSession(object):
             return url[0:pos]
         return url
 
-    @helpers.static_vars(page_num=0)
     def go_to_url(self, url, post=None, headers=[], save_data=False, is_user=True):
         """Go to a url
 
@@ -369,10 +371,6 @@ class LoadTestingSession(object):
 
             # Getting response and decoding it to content
             content = buffer.getvalue().decode(self.detect_encoding())
-
-            #print('---------')
-            #print(content)
-            #print('---------')
         except pycurl.error as e:
             end_time = time.time()
             total_time = end_time - start_time
@@ -382,9 +380,6 @@ class LoadTestingSession(object):
                                                 end_time, total_time, True, 0)
             raise Exception(e)
         curl_info = self.curl_getinfo(self.__ch)
-        #print('---------')
-        #print(curl_info)
-        #print('---------')
         rtn.set_content(content, curl_info['content_type'])
 
         # Get info
@@ -416,18 +411,19 @@ class LoadTestingSession(object):
 
         # Save files
         if save_data:
-            self.go_to_url.page_num += 1
-            with open(self.FILE_OUT_FORMAT % (self.__output_dir, os.pathsep,
-                                              self.__test_num, 'page', self.go_to_url.page_num, "info"), "w") as f:
-                f.write(pprint.pprint(rtn.get_info()) + pprint.pprint(self.__last_resp_headers))
-            with open(self.FILE_OUT_FORMAT % (self.__output_dir, os.pathsep,
-                                              self.__test_num, 'page', self.go_to_url.page_num, "content"), "w") as f:
-                f.write(rtn.get_content())
+            if not os.path.exists(self.__output_dir):
+                os.makedirs(self.__output_dir)
+            self.__page_num_go_to_url += 1
+            with open(os.path.join(self.__output_dir, self.FILE_OUT_FORMAT %
+                    (self.__test_num, 'page', self.__page_num_go_to_url, 'info')), "w",) as f:
+                f.write(pprint.pformat(rtn.get_info()) + pprint.pformat(self.__last_resp_headers))
+            with open(os.path.join(self.__output_dir, self.FILE_OUT_FORMAT %
+                    (self.__test_num, 'page', self.__page_num_go_to_url, "content")), "wb") as f:
+                f.write(rtn.get_content().encode('latin-1'))
 
         # Load resources
         if not resp_error and self.__flags & self.LOAD_RESOURCES:
             self.load_resources(rtn)
-
         return rtn
 
     def load_resources(self, page):

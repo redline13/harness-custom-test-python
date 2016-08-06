@@ -262,7 +262,6 @@ class LoadTestingPageResponse(object):
 
         :return: array List of unique image hrefs
         """
-
         srcs = []
         img_elems = self.__doc.findAll('img')
         for img_elem in img_elems:

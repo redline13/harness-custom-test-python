@@ -99,22 +99,6 @@ def get_absolute_base(url):
     return "%s://%s/" % (parsed.scheme, parsed.netloc)
 
 
-def static_vars(**kwargs):
-    """The workaround to add php's static function variables functionality to
-    python functions. It's a decorator.
-
-    :param kwargs: arbitrary amount of mixed variables
-    :return: decorated function
-    """
-
-    def decorate(func):
-        for k in kwargs:
-            setattr(func, k, kwargs[k])
-        return func
-
-    return decorate
-
-
 def isset(lst, key, subkey=None):
     """Check for a passed key presence in a passed in dictionary. Also check for a sub key presence (key
     of a dict that is a value of a first passed in key)
