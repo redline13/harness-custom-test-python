@@ -7,6 +7,8 @@ import random
 class ExampleTest(LoadTestingTest):
 
     def start_test(self):
+        """ Start test """
+
         start_user_time = time.time()
 
         for x in range(1, 101):

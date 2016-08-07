@@ -7,6 +7,7 @@ except ImportError:
 
 
 class FormLoadTest(LoadTestingTest):
+    """ Single page load testing """
 
     def __init__(self, test_num, rand):
         """Constructor

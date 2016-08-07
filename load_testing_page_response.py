@@ -226,7 +226,8 @@ class LoadTestingPageResponse(object):
                 rtn.append(tmp2.get('value'))
         return rtn
 
-    def select_dropdown_value(self, elem):
+    @staticmethod
+    def select_dropdown_value(elem):
         """Randomly select an option from a select box
 
         :param elem: DOM element holding a select box (BeautifulSoup)

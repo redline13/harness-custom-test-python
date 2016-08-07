@@ -1,3 +1,8 @@
+""" Module to hold functions that are connected with loggin data (moved from run_load_test.py
+to avoid cross-reference that could lead to a bad behavior.
+"""
+
+
 def record_page_time(ts, time, error=False, kb=0):
     """Record the load time for a USER, this is typically across multiple iterations within a user
 

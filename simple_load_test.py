@@ -4,6 +4,8 @@ import random
 
 
 class SimpleLoadTest(LoadTestingTest):
+    """ Single Page Load Testing """
+
     def __init__(self, test_num, rand):
         """Constructor
 
