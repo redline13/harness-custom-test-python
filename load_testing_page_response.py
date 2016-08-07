@@ -221,7 +221,8 @@ class LoadTestingPageResponse(object):
         rtn = []
         tmpl = self.__doc.findAll('input')
         for tmp2 in tmpl:
-            if tmp2.get('type').lower() == 'submit':
+            tmp3 = tmp2.get('type')
+            if tmp3 and tmp3.lower() == 'submit':
                 rtn.append(tmp2.get('value'))
         return rtn
 

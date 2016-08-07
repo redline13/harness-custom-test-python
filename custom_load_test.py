@@ -7,10 +7,5 @@ class CustomLoadTest(LoadTestingTest):
         super(CustomLoadTest, self).__init__(test_num, rand)
 
     def start_test(self):
-        url = 'http://keddr.com'
-        self.session.verbose()
-        self.session.enable_resource_loading()
-        self.session.loadable_resource_base_url = 'http://keddr.com'
-        page = self.session.go_to_url(url=url, save_data=True)
-        self.session.non_verbose()
+        url = 'http://www.echoecho.com/htmlforms11.htm'
         page = self.session.go_to_url(url=url, save_data=True)

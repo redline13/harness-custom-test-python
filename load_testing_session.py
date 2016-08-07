@@ -274,7 +274,7 @@ class LoadTestingSession(object):
         # Set post info
         if post:
             self.__ch.setopt(pycurl.POST, 1)
-            self.__ch.setopt(pycurl.POSTFIELDS, post)
+            self.__ch.setopt(pycurl.POSTFIELDS, urllib.urlencode(post))
         else:
             self.__ch.setopt(pycurl.POST, 0)
 
@@ -424,6 +424,7 @@ class LoadTestingSession(object):
         # Load resources
         if not resp_error and self.__flags & self.LOAD_RESOURCES:
             self.load_resources(rtn)
+
         return rtn
 
     def load_resources(self, page):
