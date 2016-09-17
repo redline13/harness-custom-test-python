@@ -114,7 +114,7 @@ try:
         start_test()
     except Exception as e:
         if e is not KeyboardInterrupt:
-            raise RuntimeError('Invalid test script.')
+            raise e
 
 except Exception as e:
     print("record_exception: %s" % str(e))
