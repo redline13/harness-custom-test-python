@@ -9,9 +9,15 @@ class ExampleTest(LoadTestingTest):
     def start_test(self):
         """ Start test """
 
+        # Example getting information from Config Dict
+        config = self.get_ini_settings()
+        iterations = 1
+        if config.has_key( 'iterations' ):
+            iterations = int(config.get( 'iterations', 1 ))
+
         start_user_time = time.time()
 
-        for x in range(1, 101):
+        for x in range(1, iterations):
             start_time = time.time()
             time.sleep(random.randint(2, 5))
             diff = time.time() - start_time
