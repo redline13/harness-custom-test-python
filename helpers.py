@@ -10,7 +10,6 @@ try:
 except ImportError:
     import urllib.parse as urlparse
 
-
 def empty(lst, key):
     """Check whether input key is absent or 0/None/""
     in the input list. The functionality is similar
@@ -108,6 +107,8 @@ def isset(lst, key, subkey=None):
     :param subkey: string Subkey to check for
     :return: bool Is both specified key are present in a list?
     """
+    if not lst:
+        return False
     try:
         lst[key]
         if subkey:
