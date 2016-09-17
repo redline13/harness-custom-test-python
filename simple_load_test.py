@@ -16,8 +16,11 @@ class SimpleLoadTest(LoadTestingTest):
         super(SimpleLoadTest, self).__init__(test_num, rand)
 
     def start_test(self):
-        """ Start the test """
+        """ Start the test and load it's resources"""
         try:
+            ## Enable Resource Loading 
+            self.enable_resource_loading()
+            self.session.loadable_resource_base_url = 'http'
             # Load page
             page = self.load_page()
 
@@ -36,6 +39,6 @@ class SimpleLoadTest(LoadTestingTest):
         time.sleep(random.uniform(0.000001, 10))
 
         # Load page
-        page = self.session.go_to_url('http://www.google.com')
+        page = self.session.go_to_url('https://www.yahoo.com')
 
         return page
