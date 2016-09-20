@@ -23,15 +23,16 @@ def record_user_start(userid, ts):
     print("record_user_start(%i, %f)" % (userid, ts))
 
 
-def record_user_stop(userid, ts, time, err=False):
+def record_user_stop(userid, ts, time, err=False, kb=0):
     """Record a user thread stopping
 
     :param userid: int user id
     :param ts: int ts
     :param time: int elapsed time
     :param err: if this user stopped because of an error
+    :param kb: int Size of request
     """
-    print("record_user_stop(%s, %f, %f, %r)" % (userid, ts, time, err))
+    print("record_user_stop(%s, %f, %f, %r, %f1)" % (userid, ts, time, err,kb))
 
 
 def record_url_page_load(url, ts, time, error=False, kb=0):
@@ -46,12 +47,13 @@ def record_url_page_load(url, ts, time, error=False, kb=0):
     print("record_url_page_load(%s, %f, %f, %r, %f)" % (url, ts, time, error, kb))
 
 
-def record_error(error):
+def record_error(error,ts):
     """Record generic error message, not specific to a request or user
 
     :param error: string Error string
+    :param ts: int Timestamp of request end
     """
-    print("record_error: %s" % error)
+    print("record_error: %s, %f" % (error,ts))
 
 
 def record_download_size(kb):
