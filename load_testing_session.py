@@ -323,7 +323,7 @@ class LoadTestingSession(object):
             return url[0:pos]
         return url
 
-    def go_to_url(self, url, post=None, headers=[], save_data=False, is_user=True):
+    def go_to_url(self, url, post=None, headers=[], save_data=False, is_user=False):
         """Go to a url
 
         :param url: string URL to go to
@@ -377,7 +377,7 @@ class LoadTestingSession(object):
             total_time = end_time - start_time
             if is_user:
                 record_helpers.record_page_time(end_time, total_time, True, 0)
-            record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(url),
+            record_helpers.record_load(self.remove_query_string_and_fragment_from_url(url),
                                                 end_time, total_time, True, 0)
             raise Exception(e)
         curl_info = self.curl_getinfo(self.__ch)
@@ -407,7 +407,7 @@ class LoadTestingSession(object):
         total_time = rtn.get_total_time()
         if is_user:
             record_helpers.record_page_time(end_time, total_time, resp_error, 0)
-        record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(url),
+        record_helpers.record_load(self.remove_query_string_and_fragment_from_url(url),
                                             end_time, total_time, resp_error, kb)
 
         # Save files
@@ -522,7 +522,7 @@ class LoadTestingSession(object):
                             end_time = time.time()
                             total_time = end_time - start_time
                             record_helpers.record_page_time(end_time, total_time, True, 0)
-                            record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(resource),
+                            record_helpers.record_load(self.remove_query_string_and_fragment_from_url(resource),
                                                                 end_time, total_time, True, 0)
                             raise Exception(e)
 
@@ -551,7 +551,7 @@ class LoadTestingSession(object):
 
                         # Record time
                         end_time = time.time()
-                        record_helpers.record_url_page_load(self.remove_query_string_and_fragment_from_url(resource),
+                        record_helpers.record_load(self.remove_query_string_and_fragment_from_url(resource),
                                                             end_time, float(info['total_time']) if not helpers.empty(info,
                                                             'total_time') else 0.0, resp_error, kb)
 

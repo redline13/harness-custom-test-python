@@ -22,20 +22,20 @@ class ExampleTest(LoadTestingTest):
 
         # Example getting information from Config Dict
         config = self.get_ini_settings()
-        iterations = 100
+        iterations = 5
         if config.has_key( 'iterations' ):
             iterations = int(config.get( 'iterations', 1 ))
 
         start_user_time = time.time()
 
-        for x in range(1, iterations):
+        for x in range(1, iterations+1):
             start_time = time.time()
             rand_time = random.randint(2, 5)
             time.sleep(rand_time)
             diff = time.time() - start_time
-            record_helpers.record_url_page_load( self.tester, start_time, diff)
+            record_helpers.record_load( x, start_time, diff)
 
         end_user_elapsed = time.time() - start_user_time
-        record_helpers.record_page_time(start_user_time, end_user_elapsed)
+        record_helpers.record_load( "Overall", start_user_time, end_user_elapsed)
 
         return True

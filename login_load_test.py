@@ -28,12 +28,12 @@ class LoginLoadTest(LoadTestingTest):
     def start_test(self):
         """Start test is the main entry point. Here we script/control the flow of the test.
         Typically in a custom test we consider the start and stop of this function as the
-        'Page' time, really the overall time for the set of operations performed by the user.
+        'User' time, really the overall time for the set of operations performed by the user.
 
         Within that page we have URLs, really the components that make up our overall ('page')
         time. This could be actual URLs, Code Blocks, Calls to DB, ....
 
-        Page = 520ms
+        User = 520ms
         URL1 = 200ms
         URL2 = 200ms
         SOME CODE (recorded as URL3) = 100ms
@@ -41,8 +41,6 @@ class LoginLoadTest(LoadTestingTest):
         The missing time might be spent in some in-between parsing operations.
         """
 
-        # Track start time to record the overall
-        start_time = time.time()
         # Track the amount of delay
         delay = 0
         # Track overall bytes captured
@@ -97,26 +95,7 @@ class LoginLoadTest(LoadTestingTest):
             # Echo statements output will be shown in our logs.out for the test.
             # This output is available in a paid subscription.
             print('Test failed.')
-
-            # We control the recording of the overall request.
-            # end_time - is the timestamp we wanat to record the event on
-            # total_time time it took for the overall request
-            # True - this field is isThisError, hence in this case it is an error.
-            # bytes - KB, the size of the response.
-            # record_page_time @see https://www.redline13.com/customTestDoc/function-recordPageTime.html
-            end_time = time.time()
-            total_time = end_time - start_time - delay
-            record_helpers.record_page_time(end_time, total_time, True, bytes / 1024.0)
-
-        # We control the recording of the overall request.
-        # end_time - is the timestamp we wanat to record the event on
-        # total_time time it took for the overall request
-        # False - this field is isThisError, hence in this case it is NOT an error, but success.
-        # bytes - KB, the size of the response.
-        # record_page_time @see https://www.redline13.com/customTestDoc/function-recordPageTime.html
-        total_time = end_time - start_time - delay
-        record_helpers.record_page_time(end_time, total_time, False, bytes / 1024.0)
-        print("BYTES RECORDED %i" % bytes)
+            raise e
 
     def load_login_page(self):
         """This will open the login page for dictionary.com and we will let the underlying call
@@ -216,7 +195,7 @@ class LoginLoadTest(LoadTestingTest):
         # False - boolean true there was an error, false this was a success
         # 0 - Kilobytes of response data, not relevant for this one.
         # recordURLPageLoad - @see https://www.redline13.com/customTestDoc/function-recordURLPageLoad.html
-        record_helpers.record_url_page_load("AnalyzeSearchPage", end_time, total_time, False, 0)
+        record_helpers.record_load("AnalyzeSearchPage", end_time, total_time, False, 0)
 
     @staticmethod
     def generate_fake_error():
@@ -231,7 +210,7 @@ class LoginLoadTest(LoadTestingTest):
         # True - boolean true there was an error, true since we are faking an error.
         # 0 - Kilobytes of response data, not relevant for this one.
         # recordURLPageLoad - @see https://www.redline13.com/customTestDoc/function-recordURLPageLoad.html
-        record_helpers.record_url_page_load("FakeError", end_time, 0, True, 0)
+        record_helpers.record_load("FakeError", end_time, 0, True, 0)
 
         # We can also record error messages using https://www.redline13.com/customTestDoc/function-recordError.html
         record_helpers.record_error("We generated an a fake error",time.time())

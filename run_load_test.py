@@ -1,6 +1,12 @@
 # internal helper functions
 import helpers
 
+# Reording functions
+import record_helpers
+
+# Need access to time for recording
+import time
+
 # to extract traceback, for fatal errors.
 import traceback
 
@@ -115,12 +121,17 @@ try:
             pass
 
     # Start test
+    start_time = time.time()
     try:
+        record_helpers.record_user_start(1,start_time)
         start_test = getattr(test, "start_test")
         start_test()
+        end_time = time.time()
+        record_helpers.record_user_stop(1, end_time, end_time - start_time, False, 0)
     except Exception as e:
-        if e is not KeyboardInterrupt:
-            raise e
+        end_time = time.time()
+        record_user_stop(1, end_time, end_time - start_time, True, 0)
+        record_error(str(e), end_time)
 
 except Exception as e:
     print("record_exception: %s" % str(e))

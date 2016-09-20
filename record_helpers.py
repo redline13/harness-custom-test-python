@@ -35,7 +35,7 @@ def record_user_stop(userid, ts, time, err=False, kb=0):
     print("record_user_stop(%s, %f, %f, %r, %f1)" % (userid, ts, time, err,kb))
 
 
-def record_url_page_load(url, ts, time, error=False, kb=0):
+def record_load(url, ts, time, error=False, kb=0):
     """Record URL load
 
     :param url: string Naming the request, can be URL or just name
@@ -44,7 +44,7 @@ def record_url_page_load(url, ts, time, error=False, kb=0):
     :param error: boolean Was this request an error
     :param kb: int size of request
     """
-    print("record_url_page_load(%s, %f, %f, %r, %f)" % (url, ts, time, error, kb))
+    print("record_load(%s, %f, %f, %r, %f)" % (url, ts, time, error, kb))
 
 
 def record_error(error,ts):

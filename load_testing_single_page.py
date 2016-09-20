@@ -139,7 +139,7 @@ class LoadTestingSinglePage(LoadTestingTest):
             store_output = not helpers.empty(self.__ini_settings, 'store_output')
 
             # Load page
-            self.session.go_to_url(url, self.__parameters['post'], [], store_output)
+            self.session.go_to_url(url, self.__parameters['post'], [], store_output, True)
 
             # Record progress
             record_helpers.record_progress(self.__test_num, (i + 1) / iterations * 100)
