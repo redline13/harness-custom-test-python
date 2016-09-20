@@ -74,26 +74,31 @@ try:
     # Register shutdown function
     sys.excepthook = inner_fatal_handler
 
-    # Get classname
+    # Get classFilename
     cn = None
     try:
         cn = sys.argv[1]
     except IndexError:
         pass
     if cn:
-        classname = sys.argv[1]
+        classFilename = sys.argv[1]
     elif not config:
         raise RuntimeError('No Configuration Available')
     elif helpers.empty(config, 'classname'):
         raise RuntimeError('Classname not specified.')
     else:
-        classname = config['classname']
+        classFilename = config['classFilename']
 
     # Set up object
-    modulename = helpers.un_camel(classname)
-    module_ = __import__(modulename)
-    class_ = getattr(module_, classname)
-    test = class_(1, None)
+    module_ = __import__(classFilename)
+    from load_testing_test import LoadTestingTest
+    subClasses = LoadTestingTest.__subclasses__()
+    if len(subClasses) == 1:
+        class_ = subClasses[0]
+    else:
+        raise Exception("Unknown Load Class")
+    test = class_( testNum, rand)
+
     try:
         set_ini_settings = getattr(test, "set_ini_settings")
         set_ini_settings(config)
