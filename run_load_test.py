@@ -84,10 +84,10 @@ try:
         classFilename = sys.argv[1]
     elif not config:
         raise RuntimeError('No Configuration Available')
-    elif helpers.empty(config, 'classname'):
-        raise RuntimeError('Classname not specified.')
+    elif helpers.empty(config, 'classfilename'):
+        raise RuntimeError('classfilename not specified.')
     else:
-        classFilename = config['classFilename']
+        classFilename = config['classfilename']
 
     # Set up object
     module_ = __import__(classFilename)
