@@ -234,4 +234,4 @@ class LoginLoadTest(LoadTestingTest):
         record_helpers.record_url_page_load("FakeError", end_time, 0, True, 0)
 
         # We can also record error messages using https://www.redline13.com/customTestDoc/function-recordError.html
-        record_helpers.record_error("We generated an a fake error")
+        record_helpers.record_error("We generated an a fake error",time.time())
