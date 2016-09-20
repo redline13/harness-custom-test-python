@@ -157,7 +157,8 @@ class LoadTestingSession(object):
         self.__ch.setopt(pycurl.TIMEOUT, 120)
 
         # Set cookie jar (i.e. filename)
-        os.mkdir(self.__cookie_dir)
+        if not os.path.exists(self.__cookie_dir):
+            os.mkdir(self.__cookie_dir)
         self.__cookie_jar = tempfile.NamedTemporaryFile(dir=self.__cookie_dir, prefix='cookie-').name
         self.__ch.setopt(pycurl.COOKIEJAR, self.__cookie_jar)
 
@@ -546,7 +547,7 @@ class LoadTestingSession(object):
                                 'uri': self.remove_query_string_and_fragment_from_url(resource),
                                 'code': resp_code
                             }
-                            record_helpers.record_error(json.dumps(err))
+                            record_helpers.record_error(json.dumps(err),time.time())
 
                         # Record time
                         end_time = time.time()
