@@ -88,6 +88,7 @@ try:
         raise RuntimeError('classfilename not specified.')
     else:
         classFilename = config['classfilename']
+    classFilename = os.path.splitext(classFilename)[0]
 
     # Set up object
     module_ = __import__(classFilename)
