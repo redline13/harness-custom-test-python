@@ -1,13 +1,30 @@
 An offline tester to validate your custom Python RedLine13 Load Test.
 
-# Quick Start
-### Specify test on Command Line
-* python runLoadTest.php ExampleTest
-  * This looks for loading module example_test.py with class ExampleTest
+## Quick Start
+```
+git clone https://github.com/redline13/harness-custom-test-python.git
+cd harness-custom-test-python
+python setup.py install
+```
+The project has a couple dependencies which should be installed with the command above. Alternatively they can be installed with pip
+* bs4
+* pycurl
 
-### Specify test in loadtest.ini
-  You can also specify test in loadtest.ini (along with other configuration)
-  * php runLoadTest.php 
+
+### Specify test on Command Line
+* python run_load_test.py example_test.py
+* python run_load_test.py example_test
+  * This opens module example_test.py and looks for a subclass of LoadTestingTest
+
+### Specify configuration in loadtest.ini
+  You can also specify configuration data in loadtest.ini which is read in and provided to your class as a dict from self.get_ini_settings()
+```
+# used in sample load test to define iterations
+iterations=4
+# can define test to run example_test or example_test.py
+classfilename=example_test
+```
+  * python run_load_test.py
 
 ### Examples Provided
 - CustomLoadTest, custom_load_test.py
