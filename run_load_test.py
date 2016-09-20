@@ -97,7 +97,7 @@ try:
         class_ = subClasses[0]
     else:
         raise Exception("Unknown Load Class")
-    test = class_( testNum, rand)
+    test = class_(1, 1)
 
     try:
         set_ini_settings = getattr(test, "set_ini_settings")
