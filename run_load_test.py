@@ -130,8 +130,8 @@ try:
         record_helpers.record_user_stop(1, end_time, end_time - start_time, False, 0)
     except Exception as e:
         end_time = time.time()
-        record_user_stop(1, end_time, end_time - start_time, True, 0)
-        record_error(str(e), end_time)
+        record_helpers.record_user_stop(1, end_time, end_time - start_time, True, 0)
+        record_helpers.record_error(str(e), end_time)
 
 except Exception as e:
     print("record_exception: %s" % str(e))
